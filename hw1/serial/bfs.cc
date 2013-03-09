@@ -26,17 +26,19 @@ void Queue::set_role(bool is_output) {
     this->is_output = is_output;
 }
 
-void Queue::init(int n) {
+void Queue::init(int n, int name) {
     reset();
     q.resize(n);
     cilk_for(int u = 0; u < n; u++) {
         q[u] = INVALID;
     }
+    this->original_name = this->name = name;
 }
 
 void Queue::reset(void) {
     head = limit = 0;
     q = self_q;
+    name = original_name;
 }
 
 bool Queue::is_empty(void) {
@@ -73,8 +75,12 @@ void Queue::try_steal(Queue &victim, int min_steal_size) {
         limit = victim.limit;
         victim.limit = head;
         q = victim.q;
+        name = victim.get_name();
     }
+}
 
+int Queue::get_name(void) {
+    return name;
 }
 
 void Queue::lock_for_stealing(void) {
@@ -90,6 +96,7 @@ Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
     m(0),
     adj(),
     d(),
+    owner(),
     p(__cilkrts_get_nworkers()),
     qs1(p, Queue()),
     qs2(p, Queue()),
@@ -106,6 +113,7 @@ void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size
     adj.clear();
     adj.resize(n);
     d.resize(n);
+    owner.resize(n);
 
     this->n = n;
     this->m = m;
@@ -133,8 +141,8 @@ unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
-    for (int i = 0; i < n; ++i) {
-        d[i] = INFINITY;
+    for (int u = 0; u < n; ++u) {
+        d[u] = INFINITY;
     }
     d[s] = 0;
     queue<int> Q;
@@ -180,14 +188,20 @@ bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(Queue* queues) {
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
     Queue &q_in = this->qs_in[i];
-    Queue &qout = this->qs_out[i];
+    Queue &q_out = this->qs_out[i];
+    int name_out = q_out.get_name();
     do {
         int u;
+        // Update each loop (changes when stealing).
+        int name_in = q_in.get_name();
         while ((u = q_in.dequeue()) != INVALID) {
-            FOR_EACH_GAMMA(v, adj[u]) {
-                if (d[*v] != INFINITY) {
-                    d[*v] = d[u] + 1;
-                    qout.enqueue(*v);
+            if (!OPT_C || owner[u] == name_in) {
+                FOR_EACH_GAMMA(v, adj[u]) {
+                    if (d[*v] != INFINITY) {
+                        d[*v] = d[u] + 1;
+                        owner[*v] = name_out;
+                        q_out.enqueue(*v);
+                    }
                 }
             }
         }
@@ -207,13 +221,19 @@ template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     cilk_for(int u = 0; u < n; ++u) {
         d[u] = INFINITY;
+        if (OPT_C) {
+            owner[u] = INVALID;
+        }
     }
     d[s] = 0;
+    if (OPT_C) {
+        owner[s] = 0;
+    }
 
     cilk_for(int i = 0; i < p; ++i) {
-        qs_in[i].init(n);
+        qs_in[i].init(n, i);
         qs_in[i].set_role(Queue::INPUT);
-        qs_out[i].init(n);
+        qs_out[i].init(n, i);
         qs_out[i].set_role(Queue::OUTPUT);
     }
 

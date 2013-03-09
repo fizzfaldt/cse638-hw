@@ -76,13 +76,15 @@ class Queue {
         int limit;
         std::vector<int> self_q;
         std::vector<int> &q;
+        int original_name;
+        int name;
     public:
         static const bool OUTPUT = true;
         static const bool INPUT = false;
 
     public:
         Queue();
-        void init(int n);
+        void init(int n, int name);
         void set_role(bool is_output);
         void reset(void);
         void enqueue(int value);
@@ -92,6 +94,7 @@ class Queue {
         void lock_for_stealing(void);
         bool try_lock_for_stealing(void);
         void unlock_for_stealing(void);
+        int get_name(void);
 };
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
@@ -102,6 +105,7 @@ class Graph {
         /* Adjacency list */
         std::vector< std::vector<int> > adj;
         std::vector<int> d;
+        std::vector<int> owner;
         int p;
         std::vector<Queue> qs1;
         std::vector<Queue> qs2;
