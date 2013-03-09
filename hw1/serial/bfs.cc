@@ -7,6 +7,7 @@
  */
 #include <assert.h>
 #include <queue>
+#include <utility>
 #include "bfs.h"
 using namespace std;
 
@@ -15,7 +16,7 @@ Queue::Queue(int size) :
     is_output(false),
     head(0),
     limit(0),
-    self_q(size, Graph::INFINITY),
+    self_q(size, INFINITY),
     q(self_q) {
 }
 
@@ -26,6 +27,10 @@ void Queue::set_role(bool is_output) {
 void Queue::reset(void) {
     head = limit = 0;
     q = self_q;
+}
+
+bool Queue::is_empty(void) {
+    return head >= limit;
 }
 
 void Queue::enqueue(int value) {
@@ -40,7 +45,7 @@ int Queue::dequeue(void) {
     if (head < limit) {
         return q[head++];
     }
-    return Graph::INFINITY;
+    return INFINITY;
 }
 
 void Queue::try_steal(Queue &victim) {
@@ -57,14 +62,19 @@ void Queue::try_steal(Queue &victim) {
     q = victim.q;
 }
 
-Graph::Graph(void) :
+
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
     n(0),
     m(0),
     adj(),
-    d() {
+    d(),
+    p(__cilkrts_get_nworkers())
+{
 }
 
-void Graph::init(int n, int m, ifstream &ifs) {
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Graph<OPT_C, OPT_G, OPT_H>::init(int n, int m, ifstream &ifs) {
     adj.clear();
     adj.resize(n);
     d.resize(n);
@@ -72,7 +82,7 @@ void Graph::init(int n, int m, ifstream &ifs) {
     this->n = n;
     this->m = m;
 
-    for (int i = 0; i < m; i++) {
+    for (int i = 0; i < m; ++i) {
         int u, v;
         ifs >> u >> v;
         adj[u].push_back(v);
@@ -82,18 +92,20 @@ void Graph::init(int n, int m, ifstream &ifs) {
 #define FOR_EACH_GAMMA(v, vec) for (vector<int>::iterator v = (vec).begin(); v != (vec).end(); ++(v))
 
 
-unsigned long long Graph::computeChecksum(void) {
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
     cilk::reducer_opadd< unsigned long long > chksum;
 
-    cilk_for (int i = 0; i < n; i++) {
+    cilk_for (int i = 0; i < n; ++i) {
         chksum += d[i];
     }
 
     return chksum.get_value();
 }
 
-void Graph::serial_bfs(int s) {
-    for (int i = 0; i < n; i++) {
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
+    for (int i = 0; i < n; ++i) {
         d[i] = INFINITY;
     }
     d[s] = 0;
@@ -112,7 +124,68 @@ void Graph::serial_bfs(int s) {
     }
 }
 
-Problem::Problem(void) :
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(int p, Queue* Qs) {
+    cilk::reducer_opand< bool > empty;
+
+    cilk_for (int i = 0; i < p; ++i) {
+        empty &= Qs[i].is_empty();
+    }
+
+    return empty.get_value();
+}
+
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
+    cilk_for(int u = 0; u < n; ++u) {
+        d[u] = INFINITY;
+    }
+    d[s] = 0;
+    Queue* Q[2][p];
+    Queue* Qin = &Q[0];
+    Queue* Qout = &Q[1];
+    cilk_for(int i = 0; i < p; ++i) {
+        Qin[i] = new Queue(n);
+        Qin[i].set_role(Queue::INPUT);
+        Qout[i] = new Queue(n);
+        Qout[i].set_role(Queue::OUTPUT);
+    }
+
+    Qin[0].set_role(Queue::OUTPUT);
+    Qin[0].enqueue(s);
+    Qin[0].set_role(Queue::INPUT);
+
+    while (!qs_are_empty(p, Qin)) {
+        if (OPT_H) {
+            cilk_for (int i = 0; i < p; ++i) {
+                cilk_spawn parallel_bfs_thread(i, Qin, Qout);
+            }
+        } else {
+            for (int i = 1; i < p; ++i) {
+                cilk_spawn parallel_bfs_thread(i, Qin, Qout);
+            }
+            cilk_spawn parallel_bfs_thread(0, Qin, Qout);
+            cilk_sync;
+        }
+        swap(Qin, Qout);
+        cilk_for(int i = 0; i < p; i++) {
+            Qin[i].set_role(Queue::INPUT);
+            Qout[i].set_role(Queue::OUTPUT);
+            Qout[i].reset();
+        }
+    }
+}
+
+//Maybe original
+//Maybe with C[i] array (c)
+//Maybe (g)
+//Maybe (h)
+//DEFINITELY f-c
+//DEFINITELY g-c
+
+
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+Problem<OPT_C, OPT_G, OPT_H>::Problem(void) :
     n(0),
     m(0),
     r(0),
@@ -120,11 +193,12 @@ Problem::Problem(void) :
     sources() {
 }
 
-void Problem::init(string filename) {
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Problem<OPT_C, OPT_G, OPT_H>::init(string filename) {
     ifstream ifs(filename.c_str());
     ifs >> n >> m >> r;
     g.init(n, m, ifs);
-    for (int i = 0; i < r; i++) {
+    for (int i = 0; i < r; ++i) {
         int s;
         ifs >> s;
         sources.push_back(s);
