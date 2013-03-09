@@ -12,16 +12,24 @@
 using namespace std;
 
 
-Queue::Queue(int size) :
+Queue::Queue(void) :
     is_output(false),
     head(0),
     limit(0),
-    self_q(size, INFINITY),
+    self_q(),
     q(self_q) {
 }
 
 void Queue::set_role(bool is_output) {
     this->is_output = is_output;
+}
+
+void Queue::init(int n) {
+    reset();
+    q.resize(n);
+    cilk_for(int u = 0; u < n; u++) {
+        q[u] = INVALID;
+    }
 }
 
 void Queue::reset(void) {
@@ -69,8 +77,11 @@ Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
     m(0),
     adj(),
     d(),
-    p(__cilkrts_get_nworkers())
-{
+    p(__cilkrts_get_nworkers()),
+    Qs1(p, Queue()),
+    Qs2(p, Queue()),
+    Qin(Qs1),
+    Qout(Qs2) {
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
@@ -136,18 +147,21 @@ bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(int p, Queue* Qs) {
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
+
+}
+
+template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     cilk_for(int u = 0; u < n; ++u) {
         d[u] = INFINITY;
     }
     d[s] = 0;
-    Queue* Q[2][p];
-    Queue* Qin = &Q[0];
-    Queue* Qout = &Q[1];
+
     cilk_for(int i = 0; i < p; ++i) {
-        Qin[i] = new Queue(n);
+        Qin[i].init(n);
         Qin[i].set_role(Queue::INPUT);
-        Qout[i] = new Queue(n);
+        Qout[i].init(n);
         Qout[i].set_role(Queue::OUTPUT);
     }
 
@@ -158,13 +172,13 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     while (!qs_are_empty(p, Qin)) {
         if (OPT_H) {
             cilk_for (int i = 0; i < p; ++i) {
-                cilk_spawn parallel_bfs_thread(i, Qin, Qout);
+                cilk_spawn parallel_bfs_thread(i);
             }
         } else {
             for (int i = 1; i < p; ++i) {
-                cilk_spawn parallel_bfs_thread(i, Qin, Qout);
+                cilk_spawn parallel_bfs_thread(i);
             }
-            cilk_spawn parallel_bfs_thread(0, Qin, Qout);
+            cilk_spawn parallel_bfs_thread(0);
             cilk_sync;
         }
         swap(Qin, Qout);

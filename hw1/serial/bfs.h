@@ -67,6 +67,7 @@ namespace cilk {
 #endif
 
 static const int INFINITY = -1;
+static const int INVALID = -1;
 
 class Queue {
     private:
@@ -80,7 +81,8 @@ class Queue {
         static const bool INPUT = false;
 
     public:
-        Queue(int size);
+        Queue();
+        void init(int n);
         void set_role(bool is_output);
         void reset(void);
         void enqueue(int value);
@@ -98,6 +100,11 @@ class Graph {
         std::vector< std::vector<int> > adj;
         std::vector<int> d;
         int p;
+        std::vector<Queue> Qs1;
+        std::vector<Queue> Qs2;
+        std::vector<Queue> &Qin;
+        std::vector<Queue> &Qout;
+
 
     public:
         Graph(void);
@@ -106,7 +113,7 @@ class Graph {
         void serial_bfs(int s);
         void parallel_bfs(int s);
     private:
-        void parallel_bfs_thread(int i, int Q_o);
+        void parallel_bfs_thread(int i);
         bool qs_are_empty(int p, Queue* Qs);
 };
 
