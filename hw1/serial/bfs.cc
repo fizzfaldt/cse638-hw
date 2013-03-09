@@ -8,6 +8,8 @@
 #include <assert.h>
 #include <queue>
 #include <utility>
+#include <stdlib.h>
+#include <time.h>
 #include "bfs.h"
 using namespace std;
 
@@ -56,20 +58,31 @@ int Queue::dequeue(void) {
     return INFINITY;
 }
 
-void Queue::try_steal(Queue &victim) {
+void Queue::try_steal(Queue &victim, int min_steal_size) {
     assert(!is_output);
     assert(!victim.is_output);
 
     //Don't steal if you have work.
     assert(head == limit);
 
-    //Steal half rounded down.
-    head = (victim.head+1+victim.limit) / 2;
-    limit = victim.limit;
-    victim.limit = head;
-    q = victim.q;
+    //Cache victim.head for both calculations.
+    int vic_head = victim.head;
+    if (victim.limit - vic_head >= min_steal_size) {
+        //Steal half rounded down.
+        head = (vic_head + 1 + victim.limit) / 2;
+        limit = victim.limit;
+        victim.limit = head;
+        q = victim.q;
+    }
+
 }
 
+void Queue::lock_for_stealing(void) {
+}
+
+bool Queue::try_lock_for_stealing(void) {
+    return true;
+}
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
@@ -78,14 +91,18 @@ Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
     adj(),
     d(),
     p(__cilkrts_get_nworkers()),
-    Qs1(p, Queue()),
-    Qs2(p, Queue()),
-    Qin(Qs1),
-    Qout(Qs2) {
+    qs1(p, Queue()),
+    qs2(p, Queue()),
+    qs_in(qs1),
+    qs_out(qs2) {
+    srandom(time(NULL));
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Graph<OPT_C, OPT_G, OPT_H>::init(int n, int m, ifstream &ifs) {
+void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size,
+        int n, int m, ifstream &ifs) {
+    this->max_steal_attempts = max_steal_attempts;
+    this->min_steal_size = min_steal_size;
     adj.clear();
     adj.resize(n);
     d.resize(n);
@@ -136,11 +153,25 @@ void Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(int p, Queue* Qs) {
+int Graph<OPT_C, OPT_G, OPT_H>::random_p(void) {
+    int choices = 1;
+    while (choices <= p) choices *= 2;
+    while (true) {
+        int r = random() & (choices - 1);
+        if (r < p) {
+            return r;
+        }
+    }
+    //Low quality, faster:
+    //return random() % p;
+}
+
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(Queue* queues) {
     cilk::reducer_opand< bool > empty;
 
     cilk_for (int i = 0; i < p; ++i) {
-        empty &= Qs[i].is_empty();
+        empty &= queues[i].is_empty();
     }
 
     return empty.get_value();
@@ -148,7 +179,28 @@ bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(int p, Queue* Qs) {
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
-
+    Queue &q_in = this->qs_in[i];
+    Queue &qout = this->qs_out[i];
+    do {
+        int u;
+        while ((u = q_in.dequeue()) != INVALID) {
+            FOR_EACH_GAMMA(v, adj[u]) {
+                if (d[*v] != INFINITY) {
+                    d[*v] = d[u] + 1;
+                    qout.enqueue(*v);
+                }
+            }
+        }
+        q_in.lock_for_stealing();
+        for (int t = 0; t < max_steal_attempts && q_in.is_empty(); ++t) {
+            int r = random_p();
+            if (qs_in[r].try_lock_for_stealing()) {
+                q_in.try_steal(qs_in[r], min_steal_size);
+                qs_in[r].unlock_for_stealing();
+            }
+        }
+        q_in.unlock_for_stealing();
+    } while (!q_in.is_empty());
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
@@ -159,17 +211,17 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     d[s] = 0;
 
     cilk_for(int i = 0; i < p; ++i) {
-        Qin[i].init(n);
-        Qin[i].set_role(Queue::INPUT);
-        Qout[i].init(n);
-        Qout[i].set_role(Queue::OUTPUT);
+        qs_in[i].init(n);
+        qs_in[i].set_role(Queue::INPUT);
+        qs_out[i].init(n);
+        qs_out[i].set_role(Queue::OUTPUT);
     }
 
-    Qin[0].set_role(Queue::OUTPUT);
-    Qin[0].enqueue(s);
-    Qin[0].set_role(Queue::INPUT);
+    qs_in[0].set_role(Queue::OUTPUT);
+    qs_in[0].enqueue(s);
+    qs_in[0].set_role(Queue::INPUT);
 
-    while (!qs_are_empty(p, Qin)) {
+    while (!qs_are_empty(p, qs_in)) {
         if (OPT_H) {
             cilk_for (int i = 0; i < p; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
@@ -181,11 +233,11 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
             cilk_spawn parallel_bfs_thread(0);
             cilk_sync;
         }
-        swap(Qin, Qout);
+        swap(qs_in, qs_out);
         cilk_for(int i = 0; i < p; i++) {
-            Qin[i].set_role(Queue::INPUT);
-            Qout[i].set_role(Queue::OUTPUT);
-            Qout[i].reset();
+            qs_in[i].set_role(Queue::INPUT);
+            qs_out[i].set_role(Queue::OUTPUT);
+            qs_out[i].reset();
         }
     }
 }
@@ -207,6 +259,7 @@ Problem<OPT_C, OPT_G, OPT_H>::Problem(void) :
     sources() {
 }
 
+long int random(void);
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 void Problem<OPT_C, OPT_G, OPT_H>::init(string filename) {
     ifstream ifs(filename.c_str());

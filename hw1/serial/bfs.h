@@ -87,8 +87,11 @@ class Queue {
         void reset(void);
         void enqueue(int value);
         int dequeue(void);
-        void try_steal(Queue &victim);
+        void try_steal(Queue &victim, int min_steal_size);
         bool is_empty(void);
+        void lock_for_stealing(void);
+        bool try_lock_for_stealing(void);
+        void unlock_for_stealing(void);
 };
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
@@ -100,21 +103,24 @@ class Graph {
         std::vector< std::vector<int> > adj;
         std::vector<int> d;
         int p;
-        std::vector<Queue> Qs1;
-        std::vector<Queue> Qs2;
-        std::vector<Queue> &Qin;
-        std::vector<Queue> &Qout;
-
+        std::vector<Queue> qs1;
+        std::vector<Queue> qs2;
+        std::vector<Queue> &qs_in;
+        std::vector<Queue> &qs_out;
+        int max_steal_attempts;
+        int min_steal_size;
 
     public:
         Graph(void);
-        void init(int n, int m, std::ifstream &ifs);
+        void init(int max_steal_attempts, int min_steal_size,
+                int n, int m, std::ifstream &ifs);
         unsigned long long computeChecksum(void);
         void serial_bfs(int s);
         void parallel_bfs(int s);
     private:
         void parallel_bfs_thread(int i);
-        bool qs_are_empty(int p, Queue* Qs);
+        bool qs_are_empty(Queue* queues);
+        int random_p(void);
 };
 
 
