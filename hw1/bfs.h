@@ -6,11 +6,15 @@
 #include <climits>
 #include <pthread.h>
 
-#define DISABLE_CILK
-#ifdef DISABLE_CILK
-#define cilk_for for
-#define cilk_spawn
-#define cilk_sync
+#ifdef __cilk
+    #include <cilk.h>
+#else
+    #define cilk_spawn
+    #define cilk_sync
+    #define cilk_for for
+
+//#define DISABLE_CILK
+//#ifdef DISABLE_CILK
 inline int __cilkrts_get_nworkers(void) {
     return 1;
 }
