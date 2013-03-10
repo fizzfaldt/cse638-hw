@@ -1,0 +1,305 @@
+\documentclass[11pt]{article}
+
+\usepackage{epsfig}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{theorem}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+
+%\usepackage{layout}% if you want to see the layout parameters
+                     % and now use \layout command in the body
+
+% This is the stuff for normal spacing
+\makeatletter
+ \setlength{\textwidth}{6.5in}
+ \setlength{\oddsidemargin}{0in}
+ \setlength{\evensidemargin}{0in}
+ \setlength{\topmargin}{0.25in}
+ \setlength{\textheight}{8.25in}
+ \setlength{\headheight}{0pt}
+ \setlength{\headsep}{0pt}
+ \setlength{\marginparwidth}{59pt}
+
+ \setlength{\parindent}{0pt}
+ \setlength{\parskip}{5pt plus 1pt}
+ \setlength{\theorempreskipamount}{5pt plus 1pt}
+ \setlength{\theorempostskipamount}{0pt}
+ \setlength{\abovedisplayskip}{8pt plus 3pt minus 6pt}
+
+ \renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                   {2ex plus -1ex minus -.2ex}%
+                                   {1.3ex plus .2ex}%
+                                   {\normalfont\Large\bfseries}}%
+ \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\large\bfseries}}%
+ \renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+ \renewcommand{\paragraph}{\@startsection{paragraph}{4}{0mm}%
+                                    {1ex \@plus1ex \@minus.2ex}%
+                                    {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+ \renewcommand{\subparagraph}{\@startsection{subparagraph}{5}{\parindent}%
+                                       {2.0ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                      {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\newenvironment{proof}{{\bf Proof:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofof}[1]{{\bf Proof of #1:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofofnobox}[1]{{\bf#1:  }}{}
+\newenvironment{example}{{\bf Example:  }}{\hfill\rule{2mm}{2mm}}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\alph{subsection}}
+
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+
+\newtheorem{fact}{Fact}[section]
+\newtheorem{lemma}[fact]{Lemma}
+\newtheorem{theorem}[fact]{Theorem}
+\newtheorem{definition}[fact]{Definition}
+\newtheorem{corollary}[fact]{Corollary}
+\newtheorem{proposition}[fact]{Proposition}
+\newtheorem{claim}[fact]{Claim}
+\newtheorem{exercise}[fact]{Exercise}
+
+% math notations
+\newcommand{\R}{\ensuremath{\mathbb R}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\F}{\ensuremath{\mathcal F}}
+\newcommand{\SymGrp}{\ensuremath{\mathfrak S}}
+
+\newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor#1\right\rfloor}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\polylog}{\operatorname{polylog}}
+
+% asymptotic notations
+\newcommand{\Oh}[1]{{\mathcal O}\left({#1}\right)}
+\newcommand{\LOh}[1]{{\mathcal O}\left({#1}\right.}
+\newcommand{\ROh}[1]{{\mathcal O}\left.{#1}\right)}
+\newcommand{\oh}[1]{{o}\left({#1}\right)}
+\newcommand{\Om}[1]{{\Omega}\left({#1}\right)}
+\newcommand{\om}[1]{{\omega}\left({#1}\right)}
+\newcommand{\Th}[1]{{\Theta}\left({#1}\right)}
+
+
+% pseudocode notations
+\newcommand{\xif}{{\bf{\em{if~}}}}
+\newcommand{\xthen}{{\bf{\em{then~}}}}
+\newcommand{\xelse}{{\bf{\em{else~}}}}
+\newcommand{\xelseif}{{\bf{\em{elif~}}}}
+\newcommand{\xfi}{{\bf{\em{fi~}}}}
+\newcommand{\xcase}{{\bf{\em{case~}}}}
+\newcommand{\xendcase}{{\bf{\em{endcase~}}}}
+\newcommand{\xfor}{{\bf{\em{for~}}}}
+\newcommand{\xto}{{\bf{\em{to~}}}}
+\newcommand{\xby}{{\bf{\em{by~}}}}
+\newcommand{\xdownto}{{\bf{\em{downto~}}}}
+\newcommand{\xdo}{{\bf{\em{do~}}}}
+\newcommand{\xrof}{{\bf{\em{rof~}}}}
+\newcommand{\xwhile}{{\bf{\em{while~}}}}
+\newcommand{\xendwhile}{{\bf{\em{endwhile~}}}}
+\newcommand{\xand}{{\bf{\em{and~}}}}
+\newcommand{\xor}{{\bf{\em{or~}}}}
+\newcommand{\xerror}{{\bf{\em{error~}}}}
+\newcommand{\xreturn}{{\bf{\em{return~}}}}
+\newcommand{\xparallel}{{\bf{\em{parallel~}}}}
+\newcommand{\T}{\hspace{0.5cm}}
+\newcommand{\m}{\mathcal}
+
+\def\sland{~\land~}
+\def\slor{~\lor~}
+\def\sRightarrow{~\Rightarrow~}
+
+\def\comment#1{\hfill{$\left\{\textrm{{\em{#1}}}\right\}$}}
+\def\lcomment#1{\hfill{$\left\{\textrm{{\em{#1}}}\right.$}}
+\def\rcomment#1{\hfill{$\left.\textrm{{\em{#1}}}\right\}$}}
+\def\fcomment#1{\hfill{$\textrm{{\em{#1}}}$}}
+\def\func#1{\textrm{\bf{\sc{#1}}}}
+\def\funcbf#1{\textrm{\textbf{\textsc{#1}}}}
+
+\newcommand{\hide}[1]{}
+
+\newcommand{\prob}[1]{\ensuremath{\text{{\bf Pr}$\left[#1\right]$}}}
+\newcommand{\expct}[1]{\ensuremath{\text{{\bf E}$\left[#1\right]$}}}
+\newcommand{\Event}{{\mathcal E}}
+
+\newcommand{\mnote}[1]{\normalmarginpar \marginpar{\tiny #1}}
+
+\makeatletter
+   \newcommand\figcaption{\def\@captype{figure}\caption}
+   \newcommand\tabcaption{\def\@captype{table}\caption}
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document begins here %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\headings}[3]{
+{\bf CSE638 \& AMS641: Advanced Algorithms} \hfill {{\bf Lecturer:} #1}\\
+{{\bf Submitted by:} #2} \hfill {{\bf Date:} #3} \\
+\\
+\rule[0.1in]{\textwidth}{0.025in}
+%\thispagestyle{empty}
+}
+
+\begin{document}
+
+\headings{Prof. Rezaul A. Chowdhury}{Yoni Fogel, Arun Rathakrishnan and Amitav Paul}{March 12, 2013}
+\newcommand{\lecnum}{1}  % Lecture Number
+
+{\centerline {\Huge Homework \# 1}}
+\section{Parallel BFS with Work Stealing}
+     
+\subsection{}
+See Graph::serial \_ bfs() in bfs.cc
+
+\subsection{}
+- In the parallel BFS, there may be two or more vertex want to update the d[v] for their adjacent vertex v. There may arise a race condition. But, since only the last update will be visible and that update is based upon the condition that d[v] was infinity earlier. So, the result will be still correct.
+
+- There may be other race condition arises when $Q^{in}.q[victim]$ is very small. In that case, while the work stealing is in progress, victim may completed its work and started to work going to be steal. So, due to overlapping of execution, race condition may arises, but still it give the valid result because someone can update only when d[v] is infinity for some other vertex v.  
+
+\subsection{}
+- One vertex can be the end point of many vertices. So, one vertex can be multiple times in $Q^{in}$. In case of stealing, thief and victim may process the same vertex so same vertex can the multiple times in $Q^{in}$.
+And since one vertex can point only once to another vertex. So, one vertex can not be more than one time in any queue of $Q^{in}$. In case of stealing, thief and victim can work on same vertex v which is already explored by the thief earlier. In that case also, since the thief already discovered and updated d[.] of that vertex earlier it will never be added to the $Q^{in}.q[victim]$. So, any vertex can not be more than once in any queue of $Q^{in}$ \\
+
+- we can add additional field c[v] which will keep the track of the processor by which it discovered. And only the processor who have discovered the vertex v has right to expand it.\\
+
+- Since $Q^{in}$ holds the vertices in the current BFS level, So, if one vertex, v is explored in the current level imply that d[v] field is not infinity. So, it will not be encountered in previous iterations.      
+ 
+
+\subsection{}
+Assume $F_i = \ceil {\frac {|q_i|}{MIN-STEAL-SIZE}}$
+
+$W_i = {F_i}^2$
+Indicator random variable \[
+S_i = \begin{cases}
+1 , $ No steal attempts on this processor$\\
+0 , $  otherwise$
+\end{cases}
+\]
+
+$X_i = W_i S_i$
+
+So, potential drop = $W_i - (\frac{W_i}{4}) - (\frac{W_i}{4}) = \frac{W_i}{2}$
+
+$E[S_i] = 1 - {(1-\frac{1}{p})}^p \geq (1-\frac{1}{e}) \geq \frac{1}{2}$
+
+Now, \[
+E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \frac{1}{e} \right) \sum \limits_{i=1}^p E[W_i] >\left( 1 - \frac{1}{e} \right) E \left [W \right ]
+\]
+
+By Markov's inequality,\\
+\[Pr \left( X < \beta W \right) = Pr \left( W - X > (1 - \beta)W \right) < \frac {E \left[ W - X \right]}{\left(1 - \beta \right)  E[W]} < \frac {1}{\left(1 - \beta \right) e }
+\]
+
+
+
+
+
+\begin{proof}
+The probability that no ball lands in bin $i$ is, $Pr ( X_i = 0 ) = \left( 1 - \frac{1}{p} \right)^p < \frac {1}{e}$.\\
+The expected value of $X_i$ is, $E \left[ X_i \right] = 0 \times Pr =\left( X_i = 0 \right) + W_i \times 
+Pr =\left( X_i \ne 0 \right) > \left( 1 - \frac{1}{e} \right) W_i$.\\
+\[
+E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \frac{1}{e} \right) \sum \limits_{i=1}^p W_i >\left( 1 - \frac{1}{e} \right) W = \left( 1 - \frac{1}{e} \right) E\left[ W \right] 
+\]
+\[
+E \left[ W - X \right] < \frac {W}{e}
+\]
+
+\end{proof}
+
+
+\begin{lemma}
+Consider time steps, $i$ and $j$ such that $j > i$ and at least p steal attempts occur between time steps i (inclusive) and j (exclusive) then,
+\[
+Pr \left( \Phi_i - \Phi_j \right)  > \frac {1}{4}.
+\]
+\label{thm:phases}
+\end{lemma}
+
+\begin{proof}
+Let each processor correspond to a bin and each steal attempt to a throw of a ball. Let Q be the set of processors which were victims of the steal attempts. Let $X_q = \phi_i(q)$ for each $q \in Q$ and $0$ otherwise.Let  $X = \sum \limits_{q=1}^p X_q$.\\
+Setting $\beta = \frac {1}{2}$ in Lemma \ref{thm:bbins}, we get,
+\[
+Pr \left( X < \frac{1}{2} \Phi_i \right) < \frac {2}{e} \implies Pr \left( X < \frac{1}{2} \Phi_i \right) \ge \left( 1 - \frac {2}{e} \right) = \frac {1}{4}
+\]
+That is the weight of queues of victim processors at time $i$ exceed half the weight of entire set of processors by $\frac {1}{4}$.\\
+From \ref{thm:cnum}, $\Phi_i - \Phi_j \ge \frac{1}{2} X$. Combining both we get,
+\[
+Pr \left( \Phi_i - \Phi_j \ge \frac {1}{4} \Phi_i \right) \ge  \frac {1}{4}
+\]
+\end{proof}
+
+
+
+
+
+\subsection{}
+Answer:
+Using the balls and bins, the probability any processor choose the wrong victim = ${(1-\frac{1}{p})}^{cp \log p} = {({(1-\frac{1}{p})}^p)}^{clnp} = {(\frac{1}{e})}^{clnp} = \frac{1}{p^c}$
+
+So, in reference of {\it Task 1(d)}, it can be shown that  $cp \log p$ is more than expected time to steal from victim. 
+
+
+\subsection{}
+Answer:
+
+\subsection{}
+Answer:
+
+\subsection{}
+Answer:
+
+\subsection{}
+Answer:
+
+\subsection{}
+
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c |}
+    \hline
+    Input File & Serial BFS & Parallel BFS & Serial BFS & Parallel BFS\\ \hline
+    cage15 & 1 & 2 & 3 & 4  \\ \hline
+    cage14 & 1 & 2 & 3 & 4  \\ \hline
+    freescale & 1 & 2 & 3 & 4  \\ \hline
+	Wikipedia & 1 & 2 & 3 & 4  \\ \hline
+    kkt-power & 1 & 2 & 3 & 4  \\ \hline
+    RMAT100M & 1 & 2 & 3 & 4  \\ \hline
+    RMAT1B & 1 & 2 & 3 & 4  \\ \hline
+        
+    \end{tabular}
+\end{center}
+
+\subsection{}
+Answer: \\[2ex]
+
+\section{Lockfree Parallel BFS}
+     
+\subsection{}
+Answer:
+
+
+
+
+\subsection{}
+Answer:
+
+
+\end{document}
