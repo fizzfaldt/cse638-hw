@@ -3,6 +3,7 @@
 #include <istream>
 #include <iostream>
 #include <fstream>
+#include <climits>
 
 #define DISABLE_CILK
 #ifdef DISABLE_CILK
@@ -66,8 +67,8 @@ namespace cilk {
 }
 #endif
 
-static const int INFINITY = -1;
-static const int INVALID = -1;
+static const int INFINITY = INT_MAX;
+static const int INVALID = INT_MAX;
 
 class Queue {
     private:
@@ -119,11 +120,12 @@ class Graph {
         void init(int max_steal_attempts, int min_steal_size,
                 int n, int m, std::ifstream &ifs);
         unsigned long long computeChecksum(void);
-        void serial_bfs(int s);
-        void parallel_bfs(int s);
+        int serial_bfs(int s);
+        int parallel_bfs(int s);
     private:
         void parallel_bfs_thread(int i);
         bool qs_are_empty(Queue* queues);
+        int find_max_d(void);
         int random_p(void);
 };
 

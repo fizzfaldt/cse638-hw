@@ -8,6 +8,7 @@
 #include <assert.h>
 #include <queue>
 #include <utility>
+#include <algorithm>
 #include <stdlib.h>
 #include <time.h>
 #include "bfs.h"
@@ -130,17 +131,17 @@ void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
-    cilk::reducer_opadd< unsigned long long > chksum;
+    cilk::reducer_opadd<unsigned long long> chksum;
 
     cilk_for (int i = 0; i < n; ++i) {
-        chksum += d[i];
+        chksum += d[i] == INFINITY ? n : d[i];
     }
 
     return chksum.get_value();
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
+int Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
     for (int u = 0; u < n; ++u) {
         d[u] = INFINITY;
     }
@@ -158,6 +159,14 @@ void Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
             }
         }
     }
+    int maxd = 0;
+    for (int u = 0; u < n; ++u) {
+        maxd = max(maxd, d[u]);
+    }
+    if (maxd == INFINITY) {
+        maxd = n;
+    }
+    return maxd;
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
@@ -218,7 +227,7 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
+int Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     cilk_for(int u = 0; u < n; ++u) {
         d[u] = INFINITY;
         if (OPT_C) {
@@ -260,6 +269,16 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
             qs_out[i].reset();
         }
     }
+
+    //TODO: Use max reducer here.
+    int maxd = 0;
+    for (int u = 0; u < n; ++u) {
+        maxd = max(maxd, d[u]);
+    }
+    if (maxd == INFINITY) {
+        maxd = n;
+    }
+    return maxd;
 }
 
 //Maybe original
@@ -293,6 +312,11 @@ void Problem<OPT_C, OPT_G, OPT_H>::init(string filename) {
     ifs.close();
 }
 
-int main(void) {
+int main(int argc, const char *argv[]) {
+    Problem<false, false, false> p;
+    argc = argc;
+    argv = argv;
+//    p.init(filename);
     return 0;
 }
+
