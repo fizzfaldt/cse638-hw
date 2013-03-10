@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <time.h>
+#include <errno.h>
 #include "bfs.h"
 using namespace std;
 
@@ -21,6 +22,13 @@ Queue::Queue(void) :
     limit(0),
     self_q(),
     q(self_q) {
+    int r = pthread_mutex_init(&lock, NULL);
+    assert(r==0);
+}
+
+Queue::~Queue(void) {
+    int r = pthread_mutex_destroy(&lock);
+    assert(r==0);
 }
 
 void Queue::set_role(bool is_output) {
@@ -85,9 +93,21 @@ int Queue::get_name(void) {
 }
 
 void Queue::lock_for_stealing(void) {
+    int r = pthread_mutex_lock(&lock);
+    assert(r==0);
+}
+
+void Queue::unlock_for_stealing(void) {
+    int r = pthread_mutex_unlock(&lock);
+    assert(r==0);
 }
 
 bool Queue::try_lock_for_stealing(void) {
+    int r = pthread_mutex_unlock(&lock);
+    if (r == EBUSY) {
+        return false;
+    }
+    assert(r==0);
     return true;
 }
 
@@ -127,7 +147,6 @@ void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size
 }
 
 #define FOR_EACH_GAMMA(v, vec) for (vector<int>::iterator v = (vec).begin(); v != (vec).end(); ++(v))
-
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
 unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
@@ -184,11 +203,11 @@ int Graph<OPT_C, OPT_G, OPT_H>::random_p(void) {
 }
 
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(Queue* queues) {
+bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(void) {
     cilk::reducer_opand< bool > empty;
 
     cilk_for (int i = 0; i < p; ++i) {
-        empty &= queues[i].is_empty();
+        empty &= qs_in[i].is_empty();
     }
 
     return empty.get_value();
@@ -250,7 +269,7 @@ int Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     qs_in[0].enqueue(s);
     qs_in[0].set_role(Queue::INPUT);
 
-    while (!qs_are_empty(p, qs_in)) {
+    while (!qs_are_empty()) {
         if (OPT_H) {
             cilk_for (int i = 0; i < p; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
@@ -298,12 +317,12 @@ Problem<OPT_C, OPT_G, OPT_H>::Problem(void) :
     sources() {
 }
 
-long int random(void);
 template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Problem<OPT_C, OPT_G, OPT_H>::init(string filename) {
+void Problem<OPT_C, OPT_G, OPT_H>::init(
+        int max_steal_attempts, int min_steal_size, string filename) {
     ifstream ifs(filename.c_str());
     ifs >> n >> m >> r;
-    g.init(n, m, ifs);
+    g.init(max_steal_attempts, min_steal_size, n, m, ifs);
     for (int i = 0; i < r; ++i) {
         int s;
         ifs >> s;
@@ -312,8 +331,61 @@ void Problem<OPT_C, OPT_G, OPT_H>::init(string filename) {
     ifs.close();
 }
 
+template<bool OPT_C, bool OPT_G, bool OPT_H>
+void Problem<OPT_C, OPT_G, OPT_H>::run(bool parallel) {
+    for (int s = 0; s < r; ++s) {
+        int maxd;
+        if (parallel) {
+            maxd = g.parallel_bfs(sources[s]);
+        } else {
+            maxd = g.serial_bfs(sources[s]);
+        }
+        printf("%d %lld\n", maxd, g.computeChecksum());
+    }
+}
+
 int main(int argc, const char *argv[]) {
-    Problem<false, false, false> p;
+    bool opt_c = random() & 0x1;
+    bool opt_g = random() & 0x1;;
+    bool opt_h = random() & 0x1;;
+    bool do_parallel = random() & 0x1;
+    int max_steal_attempts = random() & 0xFFFF;
+    int min_steal_size = random() & 0xFF;
+
+    if (opt_c && opt_g && opt_h) {
+        Problem<true, true, true> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (opt_c && opt_g && !opt_h) {
+        Problem<true, true, false> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (opt_c && !opt_g && opt_h) {
+        Problem<true, false, true> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (opt_c && !opt_g && !opt_h) {
+        Problem<true, false, false> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (!opt_c && opt_g && opt_h) {
+        Problem<false, true, true> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (!opt_c && opt_g && !opt_h) {
+        Problem<false, true, false> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (!opt_c && !opt_g && opt_h) {
+        Problem<false, false, true> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    } else if (!opt_c && !opt_g && !opt_h) {
+        Problem<false, false, false> p;
+        p.init(max_steal_attempts, min_steal_size, "filename");
+        p.run(do_parallel);
+    }
+
     argc = argc;
     argv = argv;
 //    p.init(filename);

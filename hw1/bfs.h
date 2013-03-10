@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <climits>
+#include <pthread.h>
 
 #define DISABLE_CILK
 #ifdef DISABLE_CILK
@@ -79,12 +80,14 @@ class Queue {
         std::vector<int> &q;
         int original_name;
         int name;
+        pthread_mutex_t lock;
     public:
         static const bool OUTPUT = true;
         static const bool INPUT = false;
 
     public:
         Queue();
+        ~Queue();
         void init(int n, int name);
         void set_role(bool is_output);
         void reset(void);
@@ -124,7 +127,7 @@ class Graph {
         int parallel_bfs(int s);
     private:
         void parallel_bfs_thread(int i);
-        bool qs_are_empty(Queue* queues);
+        bool qs_are_empty(void);
         int find_max_d(void);
         int random_p(void);
 };
@@ -140,5 +143,6 @@ class Problem {
         std::vector<int> sources;
     public:
         Problem(void);
-        void init(std::string filename);
+        void init(int max_steal_attempts, int min_steal_size, std::string filename);
+        void run(bool parallel);
 };
