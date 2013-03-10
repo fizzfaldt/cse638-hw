@@ -111,8 +111,7 @@ bool Queue::try_lock_for_stealing(void) {
     return true;
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
+Graph::Graph(bool opt_c, bool opt_g, bool opt_h) :
     n(0),
     m(0),
     adj(),
@@ -122,12 +121,14 @@ Graph<OPT_C, OPT_G, OPT_H>::Graph(void) :
     qs1(p, Queue()),
     qs2(p, Queue()),
     qs_in(qs1),
-    qs_out(qs2) {
+    qs_out(qs2),
+    opt_c(opt_c),
+    opt_g(opt_g),
+    opt_h(opt_h) {
     srandom(time(NULL));
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size,
+void Graph::init(int max_steal_attempts, int min_steal_size,
         int n, int m, ifstream &ifs) {
     this->max_steal_attempts = max_steal_attempts;
     this->min_steal_size = min_steal_size;
@@ -148,8 +149,7 @@ void Graph<OPT_C, OPT_G, OPT_H>::init(int max_steal_attempts, int min_steal_size
 
 #define FOR_EACH_GAMMA(v, vec) for (vector<int>::iterator v = (vec).begin(); v != (vec).end(); ++(v))
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
+unsigned long long Graph::computeChecksum(void) {
     cilk::reducer_opadd<unsigned long long> chksum;
 
     cilk_for (int i = 0; i < n; ++i) {
@@ -159,8 +159,7 @@ unsigned long long Graph<OPT_C, OPT_G, OPT_H>::computeChecksum(void) {
     return chksum.get_value();
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-int Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
+int Graph::serial_bfs(int s) {
     for (int u = 0; u < n; ++u) {
         d[u] = INFINITY;
     }
@@ -188,8 +187,7 @@ int Graph<OPT_C, OPT_G, OPT_H>::serial_bfs(int s) {
     return maxd;
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-int Graph<OPT_C, OPT_G, OPT_H>::random_p(void) {
+int Graph::random_p(void) {
     int choices = 1;
     while (choices <= p) choices *= 2;
     while (true) {
@@ -202,8 +200,7 @@ int Graph<OPT_C, OPT_G, OPT_H>::random_p(void) {
     //return random() % p;
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(void) {
+bool Graph::qs_are_empty(void) {
     cilk::reducer_opand< bool > empty;
 
     cilk_for (int i = 0; i < p; ++i) {
@@ -213,8 +210,7 @@ bool Graph<OPT_C, OPT_G, OPT_H>::qs_are_empty(void) {
     return empty.get_value();
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
+void Graph::parallel_bfs_thread(int i) {
     Queue &q_in = this->qs_in[i];
     Queue &q_out = this->qs_out[i];
     int name_out = q_out.get_name();
@@ -223,7 +219,7 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
         // Update each loop (changes when stealing).
         int name_in = q_in.get_name();
         while ((u = q_in.dequeue()) != INVALID) {
-            if (!OPT_C || owner[u] == name_in) {
+            if (!opt_c || owner[u] == name_in) {
                 FOR_EACH_GAMMA(v, adj[u]) {
                     if (d[*v] != INFINITY) {
                         d[*v] = d[u] + 1;
@@ -245,16 +241,15 @@ void Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs_thread(int i) {
     } while (!q_in.is_empty());
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-int Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
+int Graph::parallel_bfs(int s) {
     cilk_for(int u = 0; u < n; ++u) {
         d[u] = INFINITY;
-        if (OPT_C) {
+        if (opt_c) {
             owner[u] = INVALID;
         }
     }
     d[s] = 0;
-    if (OPT_C) {
+    if (opt_c) {
         owner[s] = 0;
     }
 
@@ -270,7 +265,7 @@ int Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
     qs_in[0].set_role(Queue::INPUT);
 
     while (!qs_are_empty()) {
-        if (OPT_H) {
+        if (opt_h) {
             cilk_for (int i = 0; i < p; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
             }
@@ -307,18 +302,15 @@ int Graph<OPT_C, OPT_G, OPT_H>::parallel_bfs(int s) {
 //DEFINITELY f-c
 //DEFINITELY g-c
 
-
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-Problem<OPT_C, OPT_G, OPT_H>::Problem(void) :
+Problem::Problem(bool opt_c, bool opt_g, bool opt_h) :
     n(0),
     m(0),
     r(0),
-    g(),
+    g(opt_c, opt_g, opt_h),
     sources() {
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Problem<OPT_C, OPT_G, OPT_H>::init(
+void Problem::init(
         int max_steal_attempts, int min_steal_size, string filename) {
     ifstream ifs(filename.c_str());
     ifs >> n >> m >> r;
@@ -331,8 +323,7 @@ void Problem<OPT_C, OPT_G, OPT_H>::init(
     ifs.close();
 }
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
-void Problem<OPT_C, OPT_G, OPT_H>::run(bool parallel) {
+void Problem::run(bool parallel) {
     for (int s = 0; s < r; ++s) {
         int maxd;
         if (parallel) {
@@ -352,39 +343,9 @@ int main(int argc, const char *argv[]) {
     int max_steal_attempts = random() & 0xFFFF;
     int min_steal_size = random() & 0xFF;
 
-    if (opt_c && opt_g && opt_h) {
-        Problem<true, true, true> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (opt_c && opt_g && !opt_h) {
-        Problem<true, true, false> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (opt_c && !opt_g && opt_h) {
-        Problem<true, false, true> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (opt_c && !opt_g && !opt_h) {
-        Problem<true, false, false> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (!opt_c && opt_g && opt_h) {
-        Problem<false, true, true> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (!opt_c && opt_g && !opt_h) {
-        Problem<false, true, false> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (!opt_c && !opt_g && opt_h) {
-        Problem<false, false, true> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    } else if (!opt_c && !opt_g && !opt_h) {
-        Problem<false, false, false> p;
-        p.init(max_steal_attempts, min_steal_size, "filename");
-        p.run(do_parallel);
-    }
+    Problem p(opt_c, opt_g, opt_h);
+    p.init(max_steal_attempts, min_steal_size, "filename");
+    p.run(do_parallel);
 
     argc = argc;
     argv = argv;

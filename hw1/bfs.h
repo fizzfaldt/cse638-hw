@@ -105,7 +105,6 @@ class Queue {
         int get_name(void);
 };
 
-template<bool OPT_C, bool OPT_G, bool OPT_H>
 class Graph {
     private:
         int n;
@@ -121,9 +120,12 @@ class Graph {
         std::vector<Queue> &qs_out;
         int max_steal_attempts;
         int min_steal_size;
+        bool opt_c;
+        bool opt_g;
+        bool opt_h;
 
     public:
-        Graph(void);
+        Graph(bool opt_c, bool opt_g, bool opt_h);
         void init(int max_steal_attempts, int min_steal_size,
                 int n, int m, std::ifstream &ifs);
         unsigned long long computeChecksum(void);
@@ -137,16 +139,15 @@ class Graph {
 };
 
 
-template<bool OPT_C = false, bool OPT_G = false, bool OPT_H = false>
 class Problem {
     private:
         int n;
         int m;
         int r;
-        Graph<OPT_C, OPT_G, OPT_H> g;
+        Graph g;
         std::vector<int> sources;
     public:
-        Problem(void);
+        Problem(bool opt_c, bool opt_g, bool opt_h);
         void init(int max_steal_attempts, int min_steal_size, std::string filename);
         void run(bool parallel);
 };
