@@ -1,2 +1,2 @@
 a.out: bfs.cc bfs.h
-	g++ -Wall -Wextra $<
+	cilk++ -Wall -g -Wextra $<

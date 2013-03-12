@@ -7,12 +7,14 @@
 #include <pthread.h>
 #include <inttypes.h>
 
+
 #ifdef __cilk
     #include <cilk.h>
 #else
     #define cilk_spawn
     #define cilk_sync
     #define cilk_for for
+    #define cilk_main main
 
 //#define DISABLE_CILK
 //#ifdef DISABLE_CILK

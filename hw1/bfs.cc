@@ -12,7 +12,12 @@
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
+#include <cilk.h>
+#include <reducer_opadd.h>
+#include <reducer_opand.h>
+#include <cilk_mutex.h>
 #include "bfs.h"
+#define cilkrts_get_nworkers 12
 using namespace std;
 
 
@@ -288,7 +293,8 @@ Graph::Graph(bool opt_c, bool opt_g, bool opt_h) :
     adj(),
     d(),
     owner(),
-    p(__cilkrts_get_nworkers()),
+    //p(cilkrts_get_nworkers()),
+    p(12),
     qs1(p, Queue()),
     qs2(p, Queue()),
     qs_in(qs1),
@@ -342,7 +348,7 @@ int Graph::serial_bfs(int s) {
         Q.pop();
 
         FOR_EACH_GAMMA(v, adj[u]) {
-            if (d[*v] != INFINITY) {
+            if (d[*v] == INFINITY) {
                 d[*v] = d[u] + 1;
                 Q.push(*v);
             }
@@ -350,6 +356,7 @@ int Graph::serial_bfs(int s) {
     }
     int maxd = 0;
     for (int u = 0; u < n; ++u) {
+    	if(d[u] == INFINITY) continue;
         maxd = max(maxd, d[u]);
     }
     if (maxd == INFINITY) {
@@ -399,7 +406,7 @@ void Graph::parallel_bfs_thread(int i) {
         while ((u = q_in.dequeue()) != INVALID) {
             if (!opt_c || owner[u] == name_in) {
                 FOR_EACH_GAMMA(v, adj[u]) {
-                    if (d[*v] != INFINITY) {
+                    if (d[*v] == INFINITY) {
                         d[*v] = d[u] + 1;
                         owner[*v] = name_out;
                         if (adj[*v].size() > 0) {
@@ -467,6 +474,7 @@ int Graph::parallel_bfs(int s) {
     //TODO: Use max reducer here.
     int maxd = 0;
     for (int u = 0; u < n; ++u) {
+    	if(d[u] == INFINITY) continue;
         maxd = max(maxd, d[u]);
     }
     if (maxd == INFINITY) {
@@ -515,16 +523,18 @@ void Problem::run(bool parallel) {
     }
 }
 
-int main(int argc, const char *argv[]) {
-    bool opt_c = random() & 0x1;
-    bool opt_g = random() & 0x1;;
-    bool opt_h = random() & 0x1;;
-    bool do_parallel = random() & 0x1;
+int cilk_main(int argc, char *argv[]) {
+    string file_name(argv[1]);
+    bool opt_c = atoi(argv[2]);
+    bool opt_g = atoi(argv[3]);
+    bool opt_h = atoi(argv[4]);
+    bool do_parallel = atoi(argv[5]);
+
     int max_steal_attempts = random() & 0xFFFF;
     int min_steal_size = random() & 0xFF;
 
     Problem p(opt_c, opt_g, opt_h);
-    p.init(max_steal_attempts, min_steal_size, "filename");
+    p.init(max_steal_attempts, min_steal_size, file_name);
     p.run(do_parallel);
 
     argc = argc;
