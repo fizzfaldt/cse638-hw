@@ -524,6 +524,8 @@ void Problem::run(bool parallel) {
 }
 
 int cilk_main(int argc, char *argv[]) {
+    time_t start_t;
+    time(&start_t);
     string file_name(argv[1]);
     bool opt_c = atoi(argv[2]);
     bool opt_g = atoi(argv[3]);
@@ -537,8 +539,13 @@ int cilk_main(int argc, char *argv[]) {
     p.init(max_steal_attempts, min_steal_size, file_name);
     p.run(do_parallel);
 
+    time_t stop_t;
+    time(&stop_t);
+
+    double diff = difftime(stop_t, start_t);
     argc = argc;
     argv = argv;
+    printf( "Time taken: %f\n",diff);
 //    p.init(filename);
     return 0;
 }

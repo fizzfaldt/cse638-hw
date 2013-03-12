@@ -13,4 +13,4 @@
 
 export PATH=$PATH:$HOME/cilk/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/cilk/lib
-./a.out /work/01905/rezaul/CSE638/HW1/samples/sample-02-in.txt  0 0 0 0 > serial_bfs_output
+./a.out  test_graph.in 0 0 0 1 > serial_bfs_output
