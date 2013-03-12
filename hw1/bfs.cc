@@ -521,12 +521,12 @@ int Graph::parallel_bfs(int s) {
     }
 
     //TODO: Use max reducer here.
-    int maxd = 0;
-    for (int u = 0; u < n; ++u) {
+    cilk::reducer_max<unsigned int> maxd(0);
+    cilk_for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
-        maxd = max(maxd, d[u]);
+        maxd = cilk::max(maxd, d[u]);
     }
-    return maxd;
+    return maxd.get_value();
 }
 
 //Maybe original
