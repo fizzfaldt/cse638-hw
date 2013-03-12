@@ -18,10 +18,12 @@ using namespace std;
 
 Queue::Queue(void) :
     is_output(false),
-    head(0),
-    limit(0),
+    head_pair(0),
+    limit_pair(0),
     self_q(),
-    q(self_q) {
+    q(self_q),
+    self_edge_prefix_sum_exclusive(),
+    edge_prefix_sum_exclusive(self_edge_prefix_sum_exclusive) {
     int r = pthread_mutex_init(&lock, NULL);
     assert(r==0);
 }
@@ -35,56 +37,225 @@ void Queue::set_role(bool is_output) {
     this->is_output = is_output;
 }
 
-void Queue::init(int n, int name) {
+void Queue::init(int n, int name, Graph *g, bool opt_g) {
+    this->g = g;
     reset();
     q.resize(n);
+    edge_prefix_sum_exclusive.resize(n+1); // May need to store one element after end.
     cilk_for(int u = 0; u < n; u++) {
         q[u] = INVALID;
     }
     this->original_name = this->name = name;
+    // this->adj = adj;
+    this->opt_g = opt_g;
 }
 
 void Queue::reset(void) {
-    head = limit = 0;
+    head_pair = limit_pair = 0;
     q = self_q;
+    edge_prefix_sum_exclusive = self_edge_prefix_sum_exclusive;
     name = original_name;
+    edge_steal_attempted = false;
 }
 
 bool Queue::is_empty(void) {
-    return head >= limit;
+    return head_pair >= limit_pair;
 }
 
 void Queue::enqueue(int value) {
     assert(is_output);
+
+    int limit = get_limit();
     assert(limit < (int)q.size());
     q.push_back(value);
-    limit++;
+    if (opt_g) {
+        set_limit(limit + 1);
+    } else {
+        set_limit(limit + 1);
+    }
 }
 
 int Queue::dequeue(void) {
     assert(!is_output);
+    assert(!opt_g);
+    int head = get_head();
+    int limit = get_limit();
     if (head < limit) {
-        return q[head++];
+        set_head(head+1);
+        return q[head];
     }
     return INFINITY;
+}
+
+void Queue::dequeue(int *node, int *edge) {
+    assert(!is_output);
+    assert(opt_g);
+
+    int head_node, head_edge;
+    int limit_node, limit_edge;
+    get_head(&head_node, &head_edge);
+    get_limit(&limit_node, &limit_edge);
+
+    int candidate_node;
+    // limit_node is 1 higher than the last node we actually touch.
+    // limit_edge is 1 higher than the last edge we actually touch IN
+    //                             the last node we actually touch
+    if (head_node < limit_node) { // At least one node to look at.
+        candidate_node = q[head_node];
+        if (g->weight(candidate_node, name) == head_edge) {  // Last edge in node
+            // Done with this node.
+            head_node++;
+            head_edge = 0;
+            candidate_node = q[head_node];
+        }
+        assert(g->weight(candidate_node, name) > 0);
+        if (head_node < limit_node-1  // This isn't the last node.
+                || head_edge < limit_edge ) {  // This is the last node, but not last edge
+            *node = head_node;
+            *edge = head_edge;
+            set_head(head_node, head_edge+1);
+            return;
+        }
+    }
+    // Set "easy" nothing left condition.
+    head_pair = limit_pair;
+    *node = INFINITY;
+    *edge = INFINITY;
+}
+
+int Queue::get_head(void) {
+    return (int)(head_pair >> 32);
+}
+
+int Queue::get_limit(void) {
+    return (int)(limit_pair >> 32);
+}
+
+void Queue::set_head(int head) {
+    assert(!opt_g);  //otherwise use 2-arg function.
+    assert((head_pair & 0xFFFFFFFFLL) == 0);  // No edge info
+    assert(head >= 0);
+    head_pair = static_cast<uint64_t>(head) << 32;
+}
+
+void Queue::set_limit(int limit) {
+    assert(!opt_g);  //otherwise use 2-arg function.
+    assert((limit_pair & 0xFFFFFFFFLL) == 0);  // No edge info
+    assert(limit >= 0);
+    limit_pair = static_cast<uint64_t>(limit) << 32;
+}
+
+void Queue::get_head(int *node, int *edge) {
+    assert(opt_g);  //otherwise use 1-arg function.
+    uint64_t copied = head_pair;
+    *node = static_cast<int>(copied >> 32);
+    *edge = static_cast<int>(copied & 0xFFFFFFFFLL);
+    assert(*node >= 0);
+    assert(*edge >= 0);
+}
+
+void Queue::get_limit(int *node, int *edge) {
+    assert(opt_g);  //otherwise use 1-arg function.
+    uint64_t copied = limit_pair;
+    *node = static_cast<int>(copied >> 32);
+    *edge = static_cast<int>(copied & 0xFFFFFFFFLL);
+    assert(*node >= 0);
+    assert(*edge >= 0);
+}
+
+void Queue::set_head(int node, int edge) {
+    assert(opt_g);  //otherwise use 1-arg function.
+    assert(node >= 0);
+    assert(edge >= 0);
+    head_pair = static_cast<uint64_t>(node) << 32;
+    head_pair += edge;
+}
+
+void Queue::set_limit(int node, int edge) {
+    assert(opt_g);  //otherwise use 1-arg function.
+    assert(node >= 0);
+    assert(edge >= 0);
+    limit_pair = static_cast<uint64_t>(node) << 32;
+    limit_pair += edge;
 }
 
 void Queue::try_steal(Queue &victim, int min_steal_size) {
     assert(!is_output);
     assert(!victim.is_output);
+    assert(!opt_g);
+    assert(min_steal_size >= 2); //Otherwise what does stealing half mean?
 
     //Don't steal if you have work.
-    assert(head == limit);
+    assert(this->head_pair == this->limit_pair);
 
-    //Cache victim.head for both calculations.
-    int vic_head = victim.head;
-    if (victim.limit - vic_head >= min_steal_size) {
+    int vic_head = victim.get_head();
+    int vic_limit = victim.get_limit();
+    if (vic_limit - vic_head >= min_steal_size) {
         //Steal half rounded down.
-        head = (vic_head + 1 + victim.limit) / 2;
-        limit = victim.limit;
-        victim.limit = head;
+        this->head_pair = this->limit_pair = 0;
+        int stolen_head = (vic_head + 1 + vic_limit) / 2;
+        int stolen_limit = vic_limit;
+        set_head(stolen_head);
+        set_limit(stolen_limit);
+        victim.set_limit(stolen_head);
         q = victim.q;
         name = victim.get_name();
+    }
+}
+
+void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
+    assert(!is_output);
+    assert(!victim.is_output);
+    assert(opt_g);
+    assert(min_steal_size >= 2); //Otherwise what does stealing half mean?
+
+    //Don't steal if you have work.
+    assert(this->head_pair >= this->limit_pair);
+
+    int vic_head_node, vic_head_edge;
+    int vic_limit_node, vic_limit_edge;
+    victim.get_head(&vic_head_node, &vic_head_edge);
+    victim.get_limit(&vic_limit_node, &vic_limit_edge);
+    if (vic_limit_node - vic_head_node >= min_steal_size) {
+        //We can steal half of the NODES
+        //Steal half rounded down.
+        this->head_pair = this->limit_pair = 0;
+        int stolen_head_node = (vic_head_node + 1 + vic_limit_node) / 2;
+        int stolen_head_edge = 0;
+        int stolen_limit_node = vic_limit_node;
+        int stolen_limit_edge = vic_limit_edge;
+        victim.set_limit(stolen_head_node, g->weight(victim.q[stolen_head_node-1], victim.name));
+        this->set_head(stolen_head_node, stolen_head_edge);
+        this->set_limit(stolen_limit_node, stolen_limit_edge);
+        q = victim.q;
+        name = victim.get_name();
+        edge_steal_attempted = false;
+        return;
+    }
+    //Try to steal half of the EDGES
+    if (!victim.edge_steal_attempted) {
+        // Initial edge steal information.
+        victim.edge_steal_attempted = true;
+        int64_t sum = 0;
+        for (int i = vic_head_node; i < vic_limit_node; i++) {
+            victim.edge_prefix_sum_exclusive[i] = sum;
+            sum += g->weight(victim.q[i], victim.name);
+        }
+        // victim.q[vic_limit_node] might not exist (off end).
+        victim.edge_prefix_sum_exclusive[vic_limit_node] = sum;
+    }
+    int64_t total_edges = victim.edge_prefix_sum_exclusive[vic_limit_node];
+    total_edges -= victim.edge_prefix_sum_exclusive[vic_head_node];
+    total_edges -= vic_head_edge;
+    total_edges += vic_limit_edge;
+    total_edges -= g->weight(victim.q[vic_limit_node-1], victim.name);
+
+    // total_edges is the remaining edges to work on.
+    if (total_edges >= min_steal_size) {
+        // Try to steal half (rounded down) of the remaining edges.
+//        int64_t edge_find = (total_edges + 1) / 2;
+//        //TODO:
+
     }
 }
 
@@ -210,6 +381,13 @@ bool Graph::qs_are_empty(void) {
     return empty.get_value();
 }
 
+int Graph::weight(int u, int name) {
+    if (opt_c && owner[u] != name) {
+        return 1;
+    }
+    return adj[u].size();
+}
+
 void Graph::parallel_bfs_thread(int i) {
     Queue &q_in = this->qs_in[i];
     Queue &q_out = this->qs_out[i];
@@ -224,7 +402,9 @@ void Graph::parallel_bfs_thread(int i) {
                     if (d[*v] != INFINITY) {
                         d[*v] = d[u] + 1;
                         owner[*v] = name_out;
-                        q_out.enqueue(*v);
+                        if (adj[*v].size() > 0) {
+                            q_out.enqueue(*v);
+                        }
                     }
                 }
             }
@@ -254,9 +434,9 @@ int Graph::parallel_bfs(int s) {
     }
 
     cilk_for(int i = 0; i < p; ++i) {
-        qs_in[i].init(n, i);
+        qs_in[i].init(n, i, this, opt_g);
         qs_in[i].set_role(Queue::INPUT);
-        qs_out[i].init(n, i);
+        qs_out[i].init(n, i, this, opt_g);
         qs_out[i].set_role(Queue::OUTPUT);
     }
 

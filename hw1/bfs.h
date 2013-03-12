@@ -5,6 +5,7 @@
 #include <fstream>
 #include <climits>
 #include <pthread.h>
+#include <inttypes.h>
 
 #ifdef __cilk
     #include <cilk.h>
@@ -75,16 +76,36 @@ namespace cilk {
 static const int INFINITY = INT_MAX;
 static const int INVALID = INT_MAX;
 
+class Graph;
+
 class Queue {
     private:
         bool is_output;
-        int head;
-        int limit;
+        uint64_t head_pair;
+        uint64_t limit_pair;
         std::vector<int> self_q;
         std::vector<int> &q;
+        std::vector<int64_t> self_edge_prefix_sum_exclusive;
+        std::vector<int64_t> &edge_prefix_sum_exclusive;
         int original_name;
         int name;
         pthread_mutex_t lock;
+        bool opt_g;
+        bool edge_steal_attempted;
+        Graph *g;
+
+        int get_head(void);
+        int get_limit(void);
+
+        void set_head(int head);
+        void set_limit(int limit);
+
+        void set_head(int node, int edge);
+        void set_limit(int node, int edge);
+
+        void get_head(int *node, int *edge);
+        void get_limit(int *node, int *edge);
+
     public:
         static const bool OUTPUT = true;
         static const bool INPUT = false;
@@ -92,12 +113,14 @@ class Queue {
     public:
         Queue();
         ~Queue();
-        void init(int n, int name);
+        void init(int n, int name, Graph *g, bool opt_g);
         void set_role(bool is_output);
         void reset(void);
         void enqueue(int value);
         int dequeue(void);
+        void dequeue(int *node, int *edge);
         void try_steal(Queue &victim, int min_steal_size);
+        void try_steal_edges(Queue &victim, int min_steal_size);
         bool is_empty(void);
         void lock_for_stealing(void);
         bool try_lock_for_stealing(void);
@@ -131,6 +154,7 @@ class Graph {
         unsigned long long computeChecksum(void);
         int serial_bfs(int s);
         int parallel_bfs(int s);
+        int weight(int u, int name);
     private:
         void parallel_bfs_thread(int i);
         bool qs_are_empty(void);
