@@ -89,7 +89,7 @@ int Queue::dequeue(void) {
         set_head(head+1);
         return q[head];
     }
-    return INFINITY;
+    return INVALID;
 }
 
 void Queue::dequeue(int *node, int *edge) {
@@ -124,8 +124,8 @@ void Queue::dequeue(int *node, int *edge) {
     }
     // Set "easy" nothing left condition.
     head_pair = limit_pair;
-    *node = INFINITY;
-    *edge = INFINITY;
+    *node = INVALID;
+    *edge = INVALID;
 }
 
 int Queue::get_head(void) {
@@ -391,9 +391,6 @@ int Graph::serial_bfs(int s) {
     	if(d[u] == INFINITY) continue;
         maxd = max(maxd, d[u]);
     }
-    if (maxd == INFINITY) {
-        maxd = n;
-    }
     return maxd;
 }
 
@@ -435,14 +432,34 @@ void Graph::parallel_bfs_thread(int i) {
         int u;
         // Update each loop (changes when stealing).
         int name_in = q_in.get_name();
-        while ((u = q_in.dequeue()) != INVALID) {
-            if (!opt_c || owner[u] == name_in) {
-                FOR_EACH_GAMMA(v, adj[u]) {
-                    if (d[*v] == INFINITY) {
-                        d[*v] = d[u] + 1;
-                        owner[*v] = name_out;
-                        if (adj[*v].size() > 0) {
-                            q_out.enqueue(*v);
+        if (opt_g) {
+            int u;
+            int v_index;
+            int v;
+            q_in.dequeue(&u, &v_index);
+            while (u != INVALID) {
+                if (!opt_c || owner[u] == name_in) {
+                    v = adj[u][v_index];
+                    if (d[v] == INFINITY) {
+                        d[v] = d[u] + 1;
+                        owner[v] = name_out;
+                        if (adj[v].size() > 0) {
+                            q_out.enqueue(v);
+                        }
+                    }
+                }
+                q_in.dequeue(&u, &v_index);
+            }
+        } else {
+            while ((u = q_in.dequeue()) != INVALID) {
+                if (!opt_c || owner[u] == name_in) {
+                    FOR_EACH_GAMMA(v, adj[u]) {
+                        if (d[*v] == INFINITY) {
+                            d[*v] = d[u] + 1;
+                            owner[*v] = name_out;
+                            if (adj[*v].size() > 0) {
+                                q_out.enqueue(*v);
+                            }
                         }
                     }
                 }
@@ -508,9 +525,6 @@ int Graph::parallel_bfs(int s) {
     cilk_for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
         maxd = cilk::max(maxd, d[u]);
-    }
-    if (maxd == INFINITY) {
-        maxd = n;
     }
     return maxd.get_value();
 }
