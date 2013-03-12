@@ -208,6 +208,7 @@ void Queue::try_steal(Queue &victim, int min_steal_size) {
     }
 }
 
+//TODO: Use this
 void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
     assert(!is_output);
     assert(!victim.is_output);
@@ -258,9 +259,40 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
     // total_edges is the remaining edges to work on.
     if (total_edges >= min_steal_size) {
         // Try to steal half (rounded down) of the remaining edges.
-//        int64_t edge_find = (total_edges + 1) / 2;
-//        //TODO:
+        int64_t edge_find = (total_edges + 1) / 2;
 
+        for (int i = vic_head_node; i < vic_limit_node; i++) {
+            int edges_here = g->weight(victim.q[i], victim.name);
+            int offset = 0;
+
+            if (i == vic_head_node) {
+                edges_here -= vic_head_edge;
+                offset = vic_head_edge;
+            }
+            if (i == vic_limit_node - 1) {
+                edges_here += vic_limit_edge;
+                edges_here -= g->weight(victim.q[i], victim.name);
+            }
+            if (edges_here >= edge_find) {
+                // Found it.
+
+                this->head_pair = this->limit_pair = 0;
+                int stolen_head_node = i;
+                int stolen_head_edge = edge_find + offset;
+                int stolen_limit_node = vic_limit_node;
+                int stolen_limit_edge = vic_limit_edge;
+                victim.set_limit(stolen_head_node + 1, edge_find + offset);
+                this->set_head(stolen_head_node, stolen_head_edge);
+                this->set_limit(stolen_limit_node, stolen_limit_edge);
+                q = victim.q;
+                q = victim.q;
+                edge_prefix_sum_exclusive = victim.edge_prefix_sum_exclusive;
+                name = victim.get_name();
+                edge_steal_attempted = true;
+                return;
+            }
+        }
+        assert(false);
     }
 }
 
