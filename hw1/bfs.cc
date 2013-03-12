@@ -15,6 +15,7 @@
 #include <cilk.h>
 #include <reducer_opadd.h>
 #include <reducer_opand.h>
+#include <reducer_max.h>
 #include <cilk_mutex.h>
 #include "bfs.h"
 #define cilkrts_get_nworkers 12
@@ -520,11 +521,10 @@ int Graph::parallel_bfs(int s) {
         }
     }
 
-    //TODO: Use max reducer here.
-    cilk::reducer_max<unsigned int> maxd(0);
+    cilk::reducer_max<int> maxd(0);
     cilk_for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
-        maxd = cilk::max(maxd, d[u]);
+        maxd = cilk::max_of(maxd, d[u]);
     }
     return maxd.get_value();
 }
