@@ -89,7 +89,7 @@ int Queue::dequeue(void) {
         set_head(head+1);
         return q[head];
     }
-    return INFINITY;
+    return INVALID;
 }
 
 void Queue::dequeue(int *node, int *edge) {
@@ -124,8 +124,8 @@ void Queue::dequeue(int *node, int *edge) {
     }
     // Set "easy" nothing left condition.
     head_pair = limit_pair;
-    *node = INFINITY;
-    *edge = INFINITY;
+    *node = INVALID;
+    *edge = INVALID;
 }
 
 int Queue::get_head(void) {
@@ -391,9 +391,6 @@ int Graph::serial_bfs(int s) {
     	if(d[u] == INFINITY) continue;
         maxd = max(maxd, d[u]);
     }
-    if (maxd == INFINITY) {
-        maxd = n;
-    }
     return maxd;
 }
 
@@ -508,9 +505,6 @@ int Graph::parallel_bfs(int s) {
     for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
         maxd = max(maxd, d[u]);
-    }
-    if (maxd == INFINITY) {
-        maxd = n;
     }
     return maxd;
 }
