@@ -170,18 +170,20 @@
 See Graph::serial \_ bfs() in bfs.cc
 
 \subsection{}
-- In the parallel BFS, there may be two or more vertex want to update the d[v] for their adjacent vertex v. There may arise a race condition. But, since only the last update will be visible and that update is based upon the condition that d[v] was infinity earlier. So, the result will be still correct.
+- In the {\it parallel BFS}, there may be two or more thread want to update the {\it d[v]} for their same adjacent vertex v. It may cause a race condition. But, since only the last update will be visible and that update is done by the thread exploring the vertex one level before and also based upon the condition that {\it d[v]} was infinity earlier. So, the result will still be correct.
 
-- There may be other race condition arises when $Q^{in}.q[victim]$ is very small. In that case, while the work stealing is in progress, victim may completed its work and started to work going to be steal. So, due to overlapping of execution, race condition may arises, but still it give the valid result because someone can update only when d[v] is infinity for some other vertex v.  
+- There may be other race condition arises when $Q^{in}.q[victim]$ is equal to or much greater than MIN-STEAL-SIZE. In that case, while the work stealing is in progress, victim may completed its part and started to work on the part that is going to be steal. So, due to overlapping of execution, race condition may arises, but still it give the valid result based upon the previous argument.  
 
 \subsection{}
-- One vertex can be the end point of many vertices. So, one vertex can be multiple times in $Q^{in}$. In case of stealing, thief and victim may process the same vertex so same vertex can the multiple times in $Q^{in}$.
-And since one vertex can point only once to another vertex. So, one vertex can not be more than one time in any queue of $Q^{in}$. In case of stealing, thief and victim can work on same vertex v which is already explored by the thief earlier. In that case also, since the thief already discovered and updated d[.] of that vertex earlier it will never be added to the $Q^{in}.q[victim]$. So, any vertex can not be more than once in any queue of $Q^{in}$ \\
+- One vertex can be the end point of many vertexes. So, one vertex can be multiple times in $Q^{in}$. In case of stealing, due to overlapping of execution thief and victim may process the same vertex. So that same vertex can the multiple times in $Q^{in}$.
 
-- we can add additional field c[v] which will keep the track of the processor by which it discovered. And only the processor who have discovered the vertex v has right to expand it.\\
+- Since one vertex can point only once to a particular vertex. So, one vertex can not be more than one time in any $Q^{in}.q[i]$. In case of stealing, thief may work on a vertex {\it v} which has edges to the vertexes is already explored earlier. In that case also, since the thief already discovered and updated d[.] of those vertexes earlier it will never add to the $Q^{in}.q[victim]$. So, any vertex can not be more than once in any queue of $Q^{in}$ \\
 
-- Since $Q^{in}$ holds the vertices in the current BFS level, So, if one vertex, v is explored in the current level imply that d[v] field is not infinity. So, it will not be encountered in previous iterations.      
- 
+- We can add an additional field {\it c[v]} for each vertex {\it v} which will keep the track of the processor by which it discovered. i.e. $\mathbf{c[v] = i}$ in between line 6-7 in PARALLEL-BFS-THREAD.
+
+And before expanding a vertex we check whether the vertex is discovered by this thread or not by checking {\it c[v]}. i.e. we can add \xif $\mathbf{(c[v] = i)}$ before \xfor loop at line 4 in PARALLEL-BFS-THREAD. So, only the processor who have won in the race condition for vertex v has right to expand it.\\
+
+- $Q^{in}$ holds the vertices in the current BFS level. So, any vertex {\it v} in $Q^{in}$ implies that {\it d[v]} is not infinity. Now it may happen that {\it v} is adjacent to any other vertex in $Q^{in}$. Since, {\it d[v]} is not infinity so it can not be added to $Q^{in}$ in any other successive iteration by any thread.      
 
 \subsection{}
 Assume $F_i = \ceil {\frac {|q_i|}{MIN-STEAL-SIZE}}$
@@ -206,13 +208,9 @@ E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \fra
 
 By Markov's inequality,\\
 \[Pr \left( X < \beta W \right) = Pr \left( W - X > (1 - \beta)W \right) < \frac {E \left[ W - X \right]}{\left(1 - \beta \right)  E[W]} < \frac {1}{\left(1 - \beta \right) e }
-\]
+\] \\\\\\\\
 
 
-
-
-
-\begin{proof}
 The probability that no ball lands in bin $i$ is, $Pr ( X_i = 0 ) = \left( 1 - \frac{1}{p} \right)^p < \frac {1}{e}$.\\
 The expected value of $X_i$ is, $E \left[ X_i \right] = 0 \times Pr =\left( X_i = 0 \right) + W_i \times 
 Pr =\left( X_i \ne 0 \right) > \left( 1 - \frac{1}{e} \right) W_i$.\\
@@ -223,18 +221,14 @@ E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \fra
 E \left[ W - X \right] < \frac {W}{e}
 \]
 
-\end{proof}
 
-
-\begin{lemma}
 Consider time steps, $i$ and $j$ such that $j > i$ and at least p steal attempts occur between time steps i (inclusive) and j (exclusive) then,
 \[
 Pr \left( \Phi_i - \Phi_j \right)  > \frac {1}{4}.
 \]
 \label{thm:phases}
-\end{lemma}
 
-\begin{proof}
+
 Let each processor correspond to a bin and each steal attempt to a throw of a ball. Let Q be the set of processors which were victims of the steal attempts. Let $X_q = \phi_i(q)$ for each $q \in Q$ and $0$ otherwise.Let  $X = \sum \limits_{q=1}^p X_q$.\\
 Setting $\beta = \frac {1}{2}$ in Lemma \ref{thm:bbins}, we get,
 \[
@@ -244,48 +238,68 @@ That is the weight of queues of victim processors at time $i$ exceed half the we
 From \ref{thm:cnum}, $\Phi_i - \Phi_j \ge \frac{1}{2} X$. Combining both we get,
 \[
 Pr \left( \Phi_i - \Phi_j \ge \frac {1}{4} \Phi_i \right) \ge  \frac {1}{4}
-\]
-\end{proof}
+\]\\\\\\\\
 
 
 
 
 
 \subsection{}
-Answer:
-Using the balls and bins, the probability any processor choose the wrong victim = ${(1-\frac{1}{p})}^{cp \log p} = {({(1-\frac{1}{p})}^p)}^{clnp} = {(\frac{1}{e})}^{clnp} = \frac{1}{p^c}$
+Using the balls and bins, the probability that any processor choose the wrong victim = ${(1-\frac{1}{p})}^{cp \log p} = {({(1-\frac{1}{p})}^p)}^{clnp} = {(\frac{1}{e})}^{clnp} = \frac{1}{p^c}$
+So, $cp\log p$ is a good choice for MAX-STEAL-ATTEMPTS w.h.p. 
 
-So, in reference of {\it Task 1(d)}, it can be shown that  $cp \log p$ is more than expected time to steal from victim. 
+Moreover, in reference of {\it Task 1(d)}, it can be shown that  $cp \log p$ is more than expected steal attempts to steal from a victim.
+
+\subsection{}
+For initialization: $D \log p$
+
+For stealing: $O(min \{ D^2 \log \frac {\Delta}{MIN-STEAL-SIZE} \log p, D \log \frac {n}{MIN-STEAL-SIZE} \log p \} + D p \log p \}$
+
+For exploring: $\Delta \times MIN-STEAL-SIZE + \frac{n}{p} + \frac{m}{p}$
+
+For synchronization: $D \log p$
+
+Assuming MIN-STEAL-SIZE = $\Theta(1)$
+
+So, $T_p = $
+
+Lower Bound for size of the input graph:
+
+\subsection{}
+Let assume a case, when a victim has less than MIN-STEAL-SIZE vertexes. Then a thief will try to steal the edges i.e. it will calculate the PREFIX-SUM of the out degrees of the vertexes and try to figure out whether it can steal(PREFIX-SUM is greater than the MIN-STEAL-SIZE) or not. In the successive steal attempts by other thieves, each one can determine whether it is going to steal or not by checking the PREFIX-SUM.
+
+Therefore, total steal attempts (w.h.p.) = $p \log p \times (\log q_l + \log \Delta)$ [since MIN-STEAL-SIZE = $\Theta (1)$]\\
+= $p \log p \log \Delta q_l$
+   
+\subsection{}
+We can replace \xfor by \xparallel \xfor in line 10 of {\it figure 2}. So, the line 10 will be\\
+\begin{center} 10. \xparallel \xfor i=1 \xto p-1 \xdo
+\end{center}
+
 
 
 \subsection{}
-Answer:
-
-\subsection{}
-Answer:
-
-\subsection{}
-Answer:
-
-\subsection{}
-Answer:
+See Graph::parallel \_ bfs() in bfs.cc
 
 \subsection{}
 
+\begin {table}[H]
 \begin{center}
-    \begin{tabular}{ | c | c | c | c | c |}
+    \begin{tabular}{ | c | c | c | c | c | c |}
     \hline
-    Input File & Serial BFS & Parallel BFS & Serial BFS & Parallel BFS\\ \hline
-    cage15 & 1 & 2 & 3 & 4  \\ \hline
-    cage14 & 1 & 2 & 3 & 4  \\ \hline
-    freescale & 1 & 2 & 3 & 4  \\ \hline
-	Wikipedia & 1 & 2 & 3 & 4  \\ \hline
-    kkt-power & 1 & 2 & 3 & 4  \\ \hline
-    RMAT100M & 1 & 2 & 3 & 4  \\ \hline
-    RMAT1B & 1 & 2 & 3 & 4  \\ \hline
+    Input File & $RT_{SBFS}$ & $RT_{PBFS^{(f)}}$ & $RT_{PBFS^{(g)}}$ & $SF_{PBFS^{(f)}}$ & $SF_{PBFS^{(g)}}$\\ \hline
+    cage15 & 1 & 2 & 3 & 4 & 5 \\ \hline
+    cage14 & 1 & 2 & 3 & 4 & 5 \\ \hline
+    freescale & 1 & 2 & 3 & 4 & 5 \\ \hline
+	Wikipedia & 1 & 2 & 3 & 4 & 5 \\ \hline
+    kkt-power & 1 & 2 & 3 & 4 & 5 \\ \hline
+    RMAT100M & 1 & 2 & 3 & 4 & 5 \\ \hline
+    RMAT1B & 1 & 2 & 3 & 4 & 5 \\ \hline
         
     \end{tabular}
+    \caption {RT = Running Time, SBFS = Serial BFS, $PBFS^{(f)}$ = Parallel BFS for task 1(f), $PBFS^{(g)}$ = Parallel BFS for task 1(g) and SF = Speed Factor}
 \end{center}
+\end {table}
 
 \subsection{}
 Answer: \\[2ex]
@@ -294,8 +308,6 @@ Answer: \\[2ex]
      
 \subsection{}
 Answer:
-
-
 
 
 \subsection{}
