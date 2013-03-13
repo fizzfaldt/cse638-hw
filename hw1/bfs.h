@@ -8,8 +8,9 @@
 #include <inttypes.h>
 
 
-#ifdef __cilk
+#ifdef __cilkplusplus
     #include <cilk.h>
+#error
 #else
     #define cilk_spawn
     #define cilk_sync
@@ -49,6 +50,35 @@ namespace cilk {
     };
 
     template<class T>
+    class reducer_max {
+        private:
+            T value;
+        public:
+            reducer_max(T value) {
+                this->value = value;
+            }
+
+            reducer_max & operator=(const reducer_max &rhs) {
+                value = rhs.value;
+                return *this;
+            }
+
+            reducer_max & operator =(const T &rhs) {
+                value = rhs;
+                return *this;
+            }
+
+            T get_value() {
+                return value;
+            }
+    };
+
+    template<class T>
+    T max_of(reducer_max<T> &x, T rhs) {
+        return std::max(x.get_value(), rhs);
+    }
+
+    template<class T>
     class reducer_opadd {
         private:
             T value;
@@ -86,9 +116,9 @@ class Queue {
         uint64_t head_pair;
         uint64_t limit_pair;
         std::vector<int> self_q;
-        std::vector<int> &q;
+        std::vector<int> *q;
         std::vector<int64_t> self_edge_prefix_sum_exclusive;
-        std::vector<int64_t> &edge_prefix_sum_exclusive;
+        std::vector<int64_t> *edge_prefix_sum_exclusive;
         int original_name;
         int name;
         pthread_mutex_t lock;
@@ -141,8 +171,8 @@ class Graph {
         int p;
         std::vector<Queue> qs1;
         std::vector<Queue> qs2;
-        std::vector<Queue> &qs_in;
-        std::vector<Queue> &qs_out;
+        std::vector<Queue> *qs_in;
+        std::vector<Queue> *qs_out;
         int max_steal_attempts;
         int min_steal_size;
         bool opt_c;
@@ -177,3 +207,4 @@ class Problem {
         void init(int max_steal_attempts, int min_steal_size, std::string filename);
         void run(bool parallel);
 };
+

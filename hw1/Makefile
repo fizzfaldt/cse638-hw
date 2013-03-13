@@ -1,2 +1,4 @@
-a.out: bfs.cc bfs.h
-	cilk++ -Wall -g -Wextra $< -I /usr/include/x86_64-linux-gnu -B /usr/lib/x86_64-linux-gnu
+CC=cilk++
+
+a.out: bfs.cc bfs.h Makefile
+	$(CC) -Wall -O0 -g3 -ggdb -Wextra $< -I /usr/include/x86_64-linux-gnu -B /usr/lib/x86_64-linux-gnu -lrt

@@ -12,11 +12,13 @@
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
+#ifdef __cilkplusplus
 #include <cilk.h>
 #include <reducer_opadd.h>
 #include <reducer_opand.h>
 #include <reducer_max.h>
-#include <cilk_mutex.h>
+//#include <cilk_mutex.h>
+#endif
 #include "bfs.h"
 #define cilkrts_get_nworkers 12
 using namespace std;
@@ -27,15 +29,21 @@ Queue::Queue(void) :
     head_pair(0),
     limit_pair(0),
     self_q(),
-    q(self_q),
+    q(&self_q),
     self_edge_prefix_sum_exclusive(),
-    edge_prefix_sum_exclusive(self_edge_prefix_sum_exclusive) {
+    edge_prefix_sum_exclusive(&self_edge_prefix_sum_exclusive) {
     int r = pthread_mutex_init(&lock, NULL);
     assert(r==0);
 }
 
 Queue::~Queue(void) {
     int r = pthread_mutex_destroy(&lock);
+    if (r != 0) {
+        perror("Failed destroy");
+        fprintf(stderr, "r = %d\n", r);
+        fflush(stderr);
+    }
+
     assert(r==0);
 }
 
@@ -46,10 +54,10 @@ void Queue::set_role(bool is_output) {
 void Queue::init(int n, int name, Graph *g, bool opt_g) {
     this->g = g;
     reset();
-    q.resize(n);
-    edge_prefix_sum_exclusive.resize(n+1); // May need to store one element after end.
+    q->reserve(n);
+    edge_prefix_sum_exclusive->resize(n+1); // May need to store one element after end.
     cilk_for(int u = 0; u < n; u++) {
-        q[u] = INVALID;
+        (*q)[u] = INVALID;
     }
     this->original_name = this->name = name;
     // this->adj = adj;
@@ -58,10 +66,17 @@ void Queue::init(int n, int name, Graph *g, bool opt_g) {
 
 void Queue::reset(void) {
     head_pair = limit_pair = 0;
-    q = self_q;
-    edge_prefix_sum_exclusive = self_edge_prefix_sum_exclusive;
+    q = &self_q;
+    edge_prefix_sum_exclusive = &self_edge_prefix_sum_exclusive;
     name = original_name;
     edge_steal_attempted = false;
+#if 1
+    size_t old_cap = q->capacity();
+#endif
+    q->clear();
+#if 1
+    assert(old_cap == q->capacity());
+#endif
 }
 
 bool Queue::is_empty(void) {
@@ -72,9 +87,11 @@ void Queue::enqueue(int value) {
     assert(is_output);
 
     int limit = get_limit();
-    assert(limit < (int)q.size());
-    q.push_back(value);
+    assert(limit == (int)q->size());
+    assert(limit < (int)q->capacity());
+    q->push_back(value);
     if (opt_g) {
+        //TODO: call 2 value one.. this is a bug
         set_limit(limit + 1);
     } else {
         set_limit(limit + 1);
@@ -88,7 +105,7 @@ int Queue::dequeue(void) {
     int limit = get_limit();
     if (head < limit) {
         set_head(head+1);
-        return q[head];
+        return (*q)[head];
     }
     return INVALID;
 }
@@ -107,12 +124,12 @@ void Queue::dequeue(int *node, int *edge) {
     // limit_edge is 1 higher than the last edge we actually touch IN
     //                             the last node we actually touch
     if (head_node < limit_node) { // At least one node to look at.
-        candidate_node = q[head_node];
+        candidate_node = (*q)[head_node];
         if (g->weight(candidate_node, name) == head_edge) {  // Last edge in node
             // Done with this node.
             head_node++;
             head_edge = 0;
-            candidate_node = q[head_node];
+            candidate_node = (*q)[head_node];
         }
         assert(g->weight(candidate_node, name) > 0);
         if (head_node < limit_node-1  // This isn't the last node.
@@ -231,7 +248,7 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
         int stolen_head_edge = 0;
         int stolen_limit_node = vic_limit_node;
         int stolen_limit_edge = vic_limit_edge;
-        victim.set_limit(stolen_head_node, g->weight(victim.q[stolen_head_node-1], victim.name));
+        victim.set_limit(stolen_head_node, g->weight((*victim.q)[stolen_head_node-1], victim.name));
         this->set_head(stolen_head_node, stolen_head_edge);
         this->set_limit(stolen_limit_node, stolen_limit_edge);
         q = victim.q;
@@ -245,17 +262,17 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
         victim.edge_steal_attempted = true;
         int64_t sum = 0;
         for (int i = vic_head_node; i < vic_limit_node; i++) {
-            victim.edge_prefix_sum_exclusive[i] = sum;
-            sum += g->weight(victim.q[i], victim.name);
+            (*victim.edge_prefix_sum_exclusive)[i] = sum;
+            sum += g->weight((*victim.q)[i], victim.name);
         }
-        // victim.q[vic_limit_node] might not exist (off end).
-        victim.edge_prefix_sum_exclusive[vic_limit_node] = sum;
+        // (*victim.q)[vic_limit_node] might not exist (off end).
+        (*victim.edge_prefix_sum_exclusive)[vic_limit_node] = sum;
     }
-    int64_t total_edges = victim.edge_prefix_sum_exclusive[vic_limit_node];
-    total_edges -= victim.edge_prefix_sum_exclusive[vic_head_node];
+    int64_t total_edges = (*victim.edge_prefix_sum_exclusive)[vic_limit_node];
+    total_edges -= (*victim.edge_prefix_sum_exclusive)[vic_head_node];
     total_edges -= vic_head_edge;
     total_edges += vic_limit_edge;
-    total_edges -= g->weight(victim.q[vic_limit_node-1], victim.name);
+    total_edges -= g->weight((*victim.q)[vic_limit_node-1], victim.name);
 
     // total_edges is the remaining edges to work on.
     if (total_edges >= min_steal_size) {
@@ -263,7 +280,7 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
         int64_t edge_find = (total_edges + 1) / 2;
 
         for (int i = vic_head_node; i < vic_limit_node; i++) {
-            int edges_here = g->weight(victim.q[i], victim.name);
+            int edges_here = g->weight((*victim.q)[i], victim.name);
             int offset = 0;
 
             if (i == vic_head_node) {
@@ -272,7 +289,7 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
             }
             if (i == vic_limit_node - 1) {
                 edges_here += vic_limit_edge;
-                edges_here -= g->weight(victim.q[i], victim.name);
+                edges_here -= g->weight((*victim.q)[i], victim.name);
             }
             if (edges_here >= edge_find) {
                 // Found it.
@@ -312,7 +329,7 @@ void Queue::unlock_for_stealing(void) {
 }
 
 bool Queue::try_lock_for_stealing(void) {
-    int r = pthread_mutex_unlock(&lock);
+    int r = pthread_mutex_trylock(&lock);
     if (r == EBUSY) {
         return false;
     }
@@ -330,8 +347,8 @@ Graph::Graph(bool opt_c, bool opt_g, bool opt_h) :
     p(12),
     qs1(p, Queue()),
     qs2(p, Queue()),
-    qs_in(qs1),
-    qs_out(qs2),
+    qs_in(&qs1),
+    qs_out(&qs2),
     opt_c(opt_c),
     opt_g(opt_g),
     opt_h(opt_h) {
@@ -353,7 +370,9 @@ void Graph::init(int max_steal_attempts, int min_steal_size,
     for (int i = 0; i < m; ++i) {
         int u, v;
         ifs >> u >> v;
-        adj[u].push_back(v);
+        assert(u>0);
+        assert(v>0);
+        adj[u-1].push_back(v-1);
     }
 }
 
@@ -365,6 +384,13 @@ unsigned long long Graph::computeChecksum(void) {
     cilk_for (int i = 0; i < n; ++i) {
         chksum += d[i] == INFINITY ? n : d[i];
     }
+#if 1
+    unsigned long long chksum_ser = 0;
+    for (int i = 0; i < n; ++i) {
+        chksum_ser += d[i] == INFINITY ? n : d[i];
+    }
+    assert(chksum.get_value() == chksum_ser);
+#endif
 
     return chksum.get_value();
 }
@@ -412,8 +438,17 @@ bool Graph::qs_are_empty(void) {
     cilk::reducer_opand< bool > empty;
 
     cilk_for (int i = 0; i < p; ++i) {
-        empty &= qs_in[i].is_empty();
+        empty &= (*qs_in)[i].is_empty();
     }
+#if 1
+    bool empty_ser = true;
+    for (int i = 0; i < p; ++i) {
+        bool before = empty_ser;
+        empty_ser &= (*qs_in)[i].is_empty();
+        assert(empty_ser == (before && (*qs_in)[i].is_empty()));
+    }
+    assert(empty.get_value() == empty_ser);
+#endif
 
     return empty.get_value();
 }
@@ -426,8 +461,8 @@ int Graph::weight(int u, int name) {
 }
 
 void Graph::parallel_bfs_thread(int i) {
-    Queue &q_in = this->qs_in[i];
-    Queue &q_out = this->qs_out[i];
+    Queue &q_in = (*qs_in)[i];
+    Queue &q_out = (*qs_out)[i];
     int name_out = q_out.get_name();
     do {
         int u;
@@ -468,10 +503,14 @@ void Graph::parallel_bfs_thread(int i) {
         }
         q_in.lock_for_stealing();
         for (int t = 0; t < max_steal_attempts && q_in.is_empty(); ++t) {
-            int r = random_p();
-            if (qs_in[r].try_lock_for_stealing()) {
-                q_in.try_steal(qs_in[r], min_steal_size);
-                qs_in[r].unlock_for_stealing();
+            int r = random_p(); //TODO: make it random_p_except(i);
+            if (r != i && (*qs_in)[r].try_lock_for_stealing()) {
+                if (opt_g) {
+                    q_in.try_steal_edges((*qs_in)[r], min_steal_size);
+                } else {
+                    q_in.try_steal((*qs_in)[r], min_steal_size);
+                }
+                (*qs_in)[r].unlock_for_stealing();
             }
         }
         q_in.unlock_for_stealing();
@@ -491,41 +530,72 @@ int Graph::parallel_bfs(int s) {
     }
 
     cilk_for(int i = 0; i < p; ++i) {
-        qs_in[i].init(n, i, this, opt_g);
-        qs_in[i].set_role(Queue::INPUT);
-        qs_out[i].init(n, i, this, opt_g);
-        qs_out[i].set_role(Queue::OUTPUT);
+        (*qs_in)[i].init(n, i, this, opt_g);
+        (*qs_in)[i].set_role(Queue::INPUT);
+        (*qs_out)[i].init(n, i, this, opt_g);
+        (*qs_out)[i].set_role(Queue::OUTPUT);
     }
 
-    qs_in[0].set_role(Queue::OUTPUT);
-    qs_in[0].enqueue(s);
-    qs_in[0].set_role(Queue::INPUT);
+    (*qs_in)[0].set_role(Queue::OUTPUT);
+    (*qs_in)[0].enqueue(s);
+    (*qs_in)[0].set_role(Queue::INPUT);
+#if 1
+    assert(!qs_are_empty());
+#endif
 
+#if 0
+    int source_levels = 0;
+#endif
     while (!qs_are_empty()) {
+#if 0
+        fprintf(stderr, "Source level= %d\n", source_levels);
+        fflush(stderr);
+        source_levels++;
+#endif
         if (opt_h) {
             cilk_for (int i = 0; i < p; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
             }
+#if 0
+            cilk_sync;
+#endif
         } else {
-            for (int i = 1; i < p; ++i) {
+            for (int i = 0; i < p-1; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
             }
-            cilk_spawn parallel_bfs_thread(0);
+            cilk_spawn parallel_bfs_thread(p-1);
             cilk_sync;
         }
+#if 1
+        void *a = (void*)qs_in;
+        void *b = (void*)qs_out;
+#endif
         swap(qs_in, qs_out);
+#if 1
+        assert((void*)qs_in == b);
+        assert((void*)qs_out == a);
+#endif
         cilk_for(int i = 0; i < p; i++) {
-            qs_in[i].set_role(Queue::INPUT);
-            qs_out[i].set_role(Queue::OUTPUT);
-            qs_out[i].reset();
+            (*qs_in)[i].set_role(Queue::INPUT);
+            (*qs_out)[i].set_role(Queue::OUTPUT);
+            (*qs_out)[i].reset();
         }
     }
+
 
     cilk::reducer_max<int> maxd(0);
     cilk_for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
         maxd = cilk::max_of(maxd, d[u]);
     }
+#if 1
+    int maxd_ser = 0;
+    for (int u = 0; u < n; ++u) {
+    	if(d[u] == INFINITY) continue;
+        maxd_ser = max(maxd_ser, d[u]);
+    }
+    assert(maxd_ser == maxd.get_value());
+#endif
     return maxd.get_value();
 }
 
@@ -552,7 +622,8 @@ void Problem::init(
     for (int i = 0; i < r; ++i) {
         int s;
         ifs >> s;
-        sources.push_back(s);
+        assert(s>0);
+        sources.push_back(s-1);
     }
     ifs.close();
 }
@@ -566,32 +637,41 @@ void Problem::run(bool parallel) {
             maxd = g.serial_bfs(sources[s]);
         }
         printf("%d %lld\n", maxd, g.computeChecksum());
+#if 0
+//        fprintf(stderr, "QUITTING\n");
+//        break;
+#endif
     }
 }
 
 int cilk_main(int argc, char *argv[]) {
-    time_t start_t;
-    time(&start_t);
+    assert(argc == 6);
+    struct timespec start_t;
+    struct timespec end_t;
+    int error;
+    error = clock_gettime(CLOCK_REALTIME, &start_t);
+    assert(error==0);
+
     string file_name(argv[1]);
     bool opt_c = atoi(argv[2]);
     bool opt_g = atoi(argv[3]);
     bool opt_h = atoi(argv[4]);
     bool do_parallel = atoi(argv[5]);
 
-    int max_steal_attempts = random() & 0xFFFF;
+    int max_steal_attempts = 0; //random() & 0xFFFF;
     int min_steal_size = random() & 0xFF;
 
     Problem p(opt_c, opt_g, opt_h);
     p.init(max_steal_attempts, min_steal_size, file_name);
     p.run(do_parallel);
 
-    time_t stop_t;
-    time(&stop_t);
+    error = clock_gettime(CLOCK_REALTIME, &end_t);
+    assert(error==0);
 
-    double diff = difftime(stop_t, start_t);
-    argc = argc;
-    argv = argv;
-    printf( "Time taken: %f\n",diff);
+    double start_d = start_t.tv_sec + start_t.tv_nsec / 1e9;
+    double end_d = end_t.tv_sec + end_t.tv_nsec / 1e9;
+
+    fprintf(stderr, "Time taken: %f\n", end_d - start_d);
 //    p.init(filename);
     return 0;
 }
