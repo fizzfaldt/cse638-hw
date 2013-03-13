@@ -13,4 +13,4 @@
 
 export PATH=$PATH:$HOME/cilk/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/cilk/lib
-./a.out sample-01-in.txt  0 0 0 1 4 64 > serial_bfs_output_parallel
+./a.out  /work/01905/rezaul/CSE638/HW1/turn-in/kkt_power-in.txt 0 0 0 1 > parallel/kkt_power-out.txt

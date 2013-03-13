@@ -13,4 +13,4 @@
 
 export PATH=$PATH:$HOME/cilk/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/cilk/lib
-./a.out sample-01-in.txt  0 0 0 1 4 64 > serial_bfs_output_parallel
+./a.out test_graph.in 0 0 0 1 > parallel_bfs_output2
