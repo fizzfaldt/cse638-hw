@@ -143,13 +143,13 @@ void Queue::dequeue(int *node, int *edge) {
         if (head_node < limit_node) {
             candidate_node = (*q)[head_node];
             assert(g->weight(candidate_node, name) > 0);
-        }
-        if (head_node < limit_node-1  // This isn't the last node.
-                || head_edge < limit_edge ) {  // This is the last node, but not last edge
-            *node = head_node;
-            *edge = head_edge;
-            set_head(head_node, head_edge+1);
-            return;
+            if (head_node < limit_node-1  // This isn't the last node.
+                    || head_edge < limit_edge ) {  // This is the last node, but not last edge
+                *node = head_node;
+                *edge = head_edge;
+                set_head(head_node, head_edge+1);
+                return;
+            }
         }
     }
     // Set "easy" nothing left condition.
