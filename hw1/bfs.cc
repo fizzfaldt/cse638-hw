@@ -72,11 +72,11 @@ void Queue::reset(void) {
     edge_prefix_sum_exclusive = &self_edge_prefix_sum_exclusive;
     name = original_name;
     edge_steal_attempted = false;
-#if 1
+#if CXX_CHECKS
     size_t old_cap = q->capacity();
 #endif
     q->clear();
-#if 1
+#if CXX_CHECKS
     assert(old_cap == q->capacity());
 #endif
 }
@@ -254,7 +254,7 @@ void Queue::set_head(int node, int edge) {
     num |= static_cast<uint64_t>(edge);
     head_pair = num;
 
-#if 1
+#if SINGLE_THREAD_PARANOID
     //WILL FAIL WITH MULTITHREADING!!!
     int nodetest, edgetest;
     get_head(&nodetest, &edgetest);
@@ -275,7 +275,7 @@ void Queue::set_limit(int node, int edge) {
     num |= static_cast<uint64_t>(edge);
     limit_pair = num;
 
-#if 1
+#if SINGLE_THREAD_PARANOID
     //WILL FAIL WITH MULTITHREADING!!!
     int nodetest, edgetest;
     get_limit(&nodetest, &edgetest);
@@ -338,6 +338,10 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
         edge_steal_attempted = false;
         return;
     }
+    if (vic_head_node >= vic_limit_node) {
+        // Not going to happen.
+        return;
+    }
     //Try to steal half of the EDGES
     if (!victim.edge_steal_attempted) {
         // Initial edge steal information.
@@ -350,6 +354,7 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
         // (*victim.q)[vic_limit_node] might not exist (off end).
         (*victim.edge_prefix_sum_exclusive)[vic_limit_node] = sum;
     }
+
     int64_t total_edges = (*victim.edge_prefix_sum_exclusive)[vic_limit_node];
     total_edges -= (*victim.edge_prefix_sum_exclusive)[vic_head_node];
     total_edges -= vic_head_edge;
@@ -391,6 +396,7 @@ void Queue::try_steal_edges(Queue &victim, int min_steal_size) {
                 edge_steal_attempted = true;
                 return;
             }
+            edge_find -= edges_here;
         }
         assert(false);
     }
@@ -467,7 +473,7 @@ unsigned long long Graph::computeChecksum(void) {
     cilk_for (int i = 0; i < n; ++i) {
         chksum += d[i] == INFINITY ? n : d[i];
     }
-#if 0
+#if CILK_VERIFY 
     int mind = INT_MAX;
     int maxd = INT_MIN;
     unsigned long long chksum_ser = 0;
@@ -532,7 +538,7 @@ bool Graph::qs_are_empty(void) {
     cilk_for (int i = 0; i < p; ++i) {
         empty &= (*qs_in)[i].is_empty();
     }
-#if 1
+#if CILK_VERIFY 
     bool empty_ser = true;
     for (int i = 0; i < p; ++i) {
         bool before = empty_ser;
@@ -624,7 +630,7 @@ int Graph::parallel_bfs(int s) {
             owner[u] = INVALID;
         }
     }
-#if 0
+#if DEBUG_PRINT 
     fprintf(stderr, "setting d[%d] source = 0. n=%d\n", s, n);
     fflush(stderr);
 #endif
@@ -647,15 +653,15 @@ int Graph::parallel_bfs(int s) {
     if (opt_g) {
         (*qs_in)[0].set_edge_limit();
     }
-#if 1
+#if PARANOID 
     assert(!qs_are_empty());
 #endif
 
-#if 0
+#if DEBUG_PRINT 
     int source_levels = 0;
 #endif
     while (!qs_are_empty()) {
-#if 0
+#if DEBUG_PRINT 
         fprintf(stderr, "Source level= %d\n", source_levels);
         fflush(stderr);
         source_levels++;
@@ -664,9 +670,6 @@ int Graph::parallel_bfs(int s) {
             cilk_for (int i = 0; i < p; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
             }
-#if 0
-            cilk_sync;
-#endif
         } else {
             for (int i = 0; i < p-1; ++i) {
                 cilk_spawn parallel_bfs_thread(i);
@@ -674,16 +677,18 @@ int Graph::parallel_bfs(int s) {
             cilk_spawn parallel_bfs_thread(p-1);
             cilk_sync;
         }
-#if 1
+#if CXX_CHECKS
         intptr_t a = (intptr_t)qs_in;
         intptr_t b = (intptr_t)qs_out;
 #endif
+        //Note:  std::swap here sometimes causes unexpected behavior
+        //because of optimization.  Swap manually.
         std::vector<Queue> *temp;
         temp = qs_in;
         qs_in = qs_out;
         qs_out = temp;
 
-#if 1
+#if CXX_CHECKS
         assert((intptr_t)qs_in == b);
         assert((intptr_t)qs_out == a);
 #endif
@@ -703,7 +708,7 @@ int Graph::parallel_bfs(int s) {
     	if(d[u] == INFINITY) continue;
         maxd = cilk::max_of(maxd, d[u]);
     }
-#if 1
+#if CILK_VERIFY
     int maxd_ser = 0;
     for (int u = 0; u < n; ++u) {
     	if(d[u] == INFINITY) continue;
@@ -767,7 +772,7 @@ void Problem::run(bool parallel) {
             maxd = g.serial_bfs(sources[s]);
         }
         printf("%d %llu\n", maxd, g.computeChecksum());
-#if 0
+#if QUIT_EARLY 
         fprintf(stderr, "QUITTING\n");
         break;
 #endif
@@ -788,8 +793,8 @@ int cilk_main(int argc, char *argv[]) {
     bool opt_h = atoi(argv[4]);
     bool do_parallel = atoi(argv[5]);
 
-    int max_steal_attempts_mult = 2; //random() & 0xFFFF;
-    int min_steal_size = 2;
+    int max_steal_attempts_mult = 4; //random() & 0xFFFF;
+    int min_steal_size = 64;
 
     Problem p(opt_c, opt_g, opt_h);
     p.init(max_steal_attempts_mult, min_steal_size, file_name);

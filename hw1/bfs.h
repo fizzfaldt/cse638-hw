@@ -7,6 +7,12 @@
 #include <pthread.h>
 #include <inttypes.h>
 
+#define CXX_CHECKS 0
+#define SINGLE_THREAD_PARANOID 0
+#define CILK_VERIFY 0
+#define DEBUG_PRINT 0
+#define PARANOID 0
+#define QUIT_EARLY 0
 
 #ifndef __cilkplusplus
 #include "fakecilk.h"
