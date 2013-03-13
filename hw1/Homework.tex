@@ -186,7 +186,7 @@ This does not affect correctness, it only slightly impacts performance.
 
 And before expanding a vertex we check whether the vertex is discovered by this thread or not by checking {\it c[v]}. i.e. we can add \xif $\mathbf{(c[v] = i)}$ before \xfor loop at line 4 in PARALLEL-BFS-THREAD. So, only the processor who have won in the race condition for vertex v has right to expand it.\\  Note this does not affect correctness because exactly one processor will win the race (if it happens).
 
-- $Q^{in}$ holds the vertices in the current BFS level. So, any vertex {\it v} in $Q^{in}$ implies that {\it d[v]} is not infinity. Now it may happen that {\it v} is adjacent to any other vertex in $Q^{in}$. Since, {\it d[v]} is not infinity so it can not be added to $Q^{in}$ in any other successive iteration by any thread.      
+- A single vertex cannot be in queues from multiple levels because we store the length of the shortest path to each node.  If we later find a longer path we do not overwrite it.
 
 \subsection{}
 We consider phases of $p$ steals each.\\
@@ -217,65 +217,88 @@ By Markov's inequality,\\
 \[Pr \left( X < \beta [W] \right) = Pr \left( W - X > (1 - \beta)[W] \right) < \frac {E \left[ [W] - X \right]}{\left(1 - \beta \right)  E[W]} < \frac {1}{\left(1 - \beta \right) e }
 \] \\\\\\\\
 
+Setting $\beta = \frac {1}{2}$ in Lemma \ref{thm:bbins}, we get,
+\[
+Pr \left( X < \frac{1}{2} \Phi_i \right) < \frac {2}{e} \implies Pr \left( X > \frac{1}{2} \Phi_i \right) \ge \left( 1 - \frac {2}{e} \right) = \frac {1}{4}
+\]
 
 Consider time steps, $i$ and $j$ such that $j > i$ and at least p steal attempts occur between time steps i (inclusive) and j (exclusive) then,
 \[
     Pr \left( \Phi_i - \Phi_j > \frac{\Phi_i}{4}\right)  > \frac {1}{4}.
 \]
-\label{thm:phases}
 
-
-Let each processor correspond to a bin and each steal attempt to a throw of a ball. Let Q be the set of processors which were victims of the steal attempts. Let $X_q = \phi_i(q)$ for each $q \in Q$ and $0$ otherwise.Let  $X = \sum \limits_{q=1}^p X_q$.\\
-Setting $\beta = \frac {1}{2}$ in Lemma \ref{thm:bbins}, we get,
-\[
-Pr \left( X < \frac{1}{2} \Phi_i \right) < \frac {2}{e} \implies Pr \left( X < \frac{1}{2} \Phi_i \right) \ge \left( 1 - \frac {2}{e} \right) = \frac {1}{4}
-\]
-That is the weight of queues of victim processors at time $i$ exceed half the weight of entire set of processors by $\frac {1}{4}$.\\
-From \ref{thm:cnum}, $\Phi_i - \Phi_j \ge \frac{1}{2} X$. Combining both we get,
-\[
-Pr \left( \Phi_i - \Phi_j \ge \frac {1}{4} \Phi_i \right) \ge  \frac {1}{4}
-\]\\\\\\\\
-
+Similar to Quicksort, Cilk Stealing, and other randomized algorithms, when a phase reduces a total by at least a constant fraction by at least a constant probability,
+takes $O(\log x)$ times the expected number of phases w.h.p in $x$ to reduce to any constant.
 
 
 
 
 \subsection{}
-Using the balls and bins, the probability that any processor choose the wrong victim = ${(1-\frac{1}{p})}^{cp \log p} = {({(1-\frac{1}{p})}^p)}^{clnp} = {(\frac{1}{e})}^{clnp} = \frac{1}{p^c}$
-So, $cp\log p$ is a good choice for MAX-STEAL-ATTEMPTS w.h.p. 
+Assuming there is at least one core to steal from, the probability that a core
+tries to steal $cp\log p$ times and never chooses any of those cores $\le {(1-\frac{1}{p})}^{cp \log p} = {({(1-\frac{1}{p})}^p)}^{clnp} = {(\frac{1}{e})}^{clnp} = \frac{1}{p^c}$
 
-Moreover, in reference of {\it Task 1(d)}, it can be shown that  $cp \log p$ is more than expected steal attempts to steal from a victim.
+So MAX-STEAL-ATTEMPTS = $cp\ln p, c>1$ means that if any cores have enough work to be stolen from,
+any core trying to steal will choose at least one of them with high probability in p.
 
-\subsection{}
-For initialization: $D \log p$
-
-For stealing: $O(min \{ D^2 \log \frac {\Delta}{MIN-STEAL-SIZE} \log p, D \log \frac {n}{MIN-STEAL-SIZE} \log p \} + D p \log p \}$
-
-For exploring: $\Delta \times MIN-STEAL-SIZE + \frac{n}{p} + \frac{m}{p}$
-
-For synchronization: $D \log p$
-
-Assuming MIN-STEAL-SIZE = $\Theta(1)$
-
-So, $T_p = $
-
-Lower Bound for size of the input graph:
+Moreover, in reference of {\it Task 1(d)}, it can be shown that  $cp^2 \ln p, c>1$ ($p$ cores have to steal before finishing bfs-thread)
+is more than the expected number of steal attempts before all steal attempts in the system fail.
 
 \subsection{}
-Let assume a case, when a victim has less than MIN-STEAL-SIZE vertexes. Then a thief will try to steal the edges i.e. it will calculate the PREFIX-SUM of the out degrees of the vertexes and try to figure out whether it can steal(PREFIX-SUM is greater than the MIN-STEAL-SIZE) or not. In the successive steal attempts by other thieves, each one can determine whether it is going to steal or not by checking the PREFIX-SUM.
+MIN-STEAL-SIZE is assumed to be $\Theta(1)$.
 
-Therefore, total steal attempts (w.h.p.) = $p \log p \times (\log q_l + \log \Delta)$ [since MIN-STEAL-SIZE = $\Theta (1)$]\\
-= $p \log p \log \Delta q_l$
-   
+$T_p$:
+
+Waiting to launch: $O(Dp)$.
+
+Stealing: $O(D p \log p + D \log p \log n)$ With high probability in p.
+
+Exploring: $O(D \Delta  + \frac{n}{p} + \frac{m}{p})$ worst case.
+
+Synchronization: $O(D \log p)$ worst case.
+
+So, $T_p = O( D(p \log p + \log p \log n + \Delta) + \frac{n+m}{p})$ with high probability in p.
+
+Total work:
+
+Stealing: $O(D p^2 \log p + Dp\log p \log n)$ with high probability in p.
+
+Exploring: $O(n + m)$ worst case.
+
+Synchronization: $O(D p)$
+
+So, total work is $O( D(p^2 \log p + p\log p\log n) + n + m)$
+
+Lower Bound for size of the input graph where total work is work optimal ($O(n+m)$):
+
+$m+n = \Omega(D(p^2 \log p + p\log p\log n))$.
+
+
+
 \subsection{}
-We can replace \xfor by \xparallel \xfor in line 10 of {\it figure 2}. So, the line 10 will be\\
-\begin{center} 10. \xparallel \xfor i=1 \xto p-1 \xdo
-\end{center}
+Operate as normal.  When you try to steal from a victim with fewer than MIN-STEAL-SIZE vertexes,
+switch to stealing half the out degrees remaining.  Instead of $D p\log p\log q_l$ steals with high probability,
+it's $D p \log p \log (q_l\Delta)$ steals.
+
+Assuming MIN-STEAL-SIZE $= \Theta(1)$ means it takes constant time to split the queue into two pieces,
+with additional information to say which outgoing edges should be done by the victim and which by the thief.
+
+Without the assumption you can do a serial prefix-sum of the remaining nodes the first time you try to steal
+edges (instead of nodes).  Then you can do MIN-STEAL-SIZE work for free (charge against one of the successful steals)
+Then you can fail to steal in $O(1)$ time and successfully steal in $O($MIN-STEAL-SIZE$)$ time.
+
+The analysis from $f$ remains the same, except that $\Delta$ disappears entirely.
+
+\subsection{}
+We can replace \xfor by \xparallel \xfor in line 10 of {\it figure 2} and do all $p$ spawns in parallel.
+This changes the time spent waiting to start from $O(Dp)$ to $O(D\log p)$ but both are dominated by other terms
+so it does not change the upper bound of either $f$ or $g$..
 
 
 
 \subsection{}
 See Graph::parallel \_ bfs() in bfs.cc
+You can do all $2^3$ versions of the algorithm by independently turning on the optimizations from $c$, $g$, and $h$.
+
 
 \subsection{}
 
