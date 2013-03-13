@@ -294,13 +294,30 @@ The analysis from $f$ remains the same, except that $\Delta$ disappears entirely
 \subsection{}
 We can replace \xfor by \xparallel \xfor in line 10 of {\it figure 2} and do all $p$ spawns in parallel.
 This changes the time spent waiting to start from $O(Dp)$ to $O(D\log p)$ but both are dominated by other terms
-so it does not change the upper bound of either $f$ or $g$..
+so it does not change the upper bound of either $f$ or $g$.
 
 
 
 \subsection{}
 See Graph::parallel \_ bfs() in bfs.cc
-You can do all $2^3$ versions of the algorithm by independently turning on the optimizations from $c$, $g$, and $h$.
+You can do all $2^3$ versions of the algorithm by independently turning on the optimizations from $c$, $g$, and $h$.\\
+The optimal value occurs when $8p\log p$ is MAX-STEAL-ATTEMPTS and 196 is MIN-STEAL-SIZE for the Wikipedia graph. 
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c |}
+    \hline
+    MAX-STEAL-ATTEMPTS &MIN-STEAL-SIZE & Time \\ \hline
+    8 & 32 & 705.017 \\ \hline
+    8 & 64 & 705.774 \\ \hline
+    8 & 128 & 695.900 \\ \hline
+	8 & 196 & 705.940 \\ \hline
+    16 & 32 & 706.917 \\ \hline
+    16 & 64 & 703.42 \\ \hline
+            
+    \end{tabular}
+    \caption {Run for Wikipedia.}
+\end{center}
+\end {table}
 
 
 \subsection{}
@@ -310,30 +327,17 @@ You can do all $2^3$ versions of the algorithm by independently turning on the o
     \begin{tabular}{ | c | c | c | c | c | c |}
     \hline
     Input File & $RT_{SBFS}$ & $RT_{PBFS^{(f)}}$ & $RT_{PBFS^{(g)}}$ & $SF_{PBFS^{(f)}}$ & $SF_{PBFS^{(g)}}$\\ \hline
-    cage15 & 1 & 2 & 3 & 4 & 5 \\ \hline
-    cage14 & 1 & 2 & 3 & 4 & 5 \\ \hline
-    freescale & 1 & 2 & 3 & 4 & 5 \\ \hline
-	Wikipedia & 1 & 2 & 3 & 4 & 5 \\ \hline
-    kkt-power & 1 & 2 & 3 & 4 & 5 \\ \hline
-    RMAT100M & 1 & 2 & 3 & 4 & 5 \\ \hline
-    RMAT1B & 1 & 2 & 3 & 4 & 5 \\ \hline
+    cage14 & 1786 & 313 & 315.18 & 5.70 & 5.67 \\ \hline
+    cage15 & 1231 & 303.904 & 303.75 & 4.05 & 4.05 \\ \hline
+    freescale & 1835 & 223 & 253.00 & 8.22 & 7.25 \\ \hline
+	Wikipedia & 709 & 705.47 & 703 & 1.00 & 1.00 \\ \hline
+    kkt-power & 410 & 21.5 & 20.79 & 19.07 & 19.72 \\ \hline
+    RMAT100M & 3253 & 673.57 & 647.00 & 4.83 & 5.03 \\ \hline
+    RMAT1B & - & 2544.57 & - & - & - \\ \hline
         
     \end{tabular}
-    \caption {RT = Running Time, SBFS = Serial BFS, $PBFS^{(f)}$ = Parallel BFS for task 1(f), $PBFS^{(g)}$ = Parallel BFS for task 1(g) and SF = Speed Factor}
+    \caption {RT = Running Time, SBFS = Serial BFS, $PBFS^{(f)}$ = Parallel BFS for task 1(f), $PBFS^{(g)}$ = Parallel BFS for task 1(g) and SF = Speed Factor. Times are in seconds.}
 \end{center}
 \end {table}
-
-\subsection{}
-Answer: \\[2ex]
-
-\section{Lockfree Parallel BFS}
-     
-\subsection{}
-Answer:
-
-
-\subsection{}
-Answer:
-
 
 \end{document}
