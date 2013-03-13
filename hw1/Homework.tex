@@ -170,9 +170,12 @@
 See Graph::serial \_ bfs() in bfs.cc
 
 \subsection{}
+
 - In {\it PARALLEL-BFS}, the following race conditions may occur, but will not affect the correctness of the output:
+
 - In {\it PARALLEL-BFS-THREAD}, multiple cores can be on line $5$ with the same vertex $v$. It is then possible for two (or more) threads to call line $6$
 at the same time for $v$.  This does not affect correctness because all threads are writing the same value.
+
 - In {\it PARALLEL-BFS-THREAD}, when stealing, we lock the thief and victim, but only protecting from other thieves.  There can be a race condition if
 the victim is fast (or MIN-STEAL-SIZE $\approx |Q^{in}.q[$victim$]|$, where the victim explores some vertexes that were ALSO stolen.
 This does not affect correctness, it only slightly impacts performance.
