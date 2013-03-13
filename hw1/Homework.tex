@@ -170,35 +170,40 @@
 See Graph::serial \_ bfs() in bfs.cc
 
 \subsection{}
-- In the {\it parallel BFS}, there may be two or more thread want to update the {\it d[v]} for their same adjacent vertex v. It may cause a race condition. But, since only the last update will be visible and that update is done by the thread exploring the vertex one level before and also based upon the condition that {\it d[v]} was infinity earlier. So, the result will still be correct.
-
-- There may be other race condition arises when $Q^{in}.q[victim]$ is equal to or much greater than MIN-STEAL-SIZE. In that case, while the work stealing is in progress, victim may completed its part and started to work on the part that is going to be steal. So, due to overlapping of execution, race condition may arises, but still it give the valid result based upon the previous argument.  
+- In {\it PARALLEL-BFS}, the following race conditions may occur, but will not affect the correctness of the output:
+- In {\it PARALLEL-BFS-THREAD}, multiple cores can be on line $5$ with the same vertex $v$. It is then possible for two (or more) threads to call line $6$
+at the same time for $v$.  This does not affect correctness because all threads are writing the same value.
+- In {\it PARALLEL-BFS-THREAD}, when stealing, we lock the thief and victim, but only protecting from other thieves.  There can be a race condition if
+the victim is fast (or MIN-STEAL-SIZE $\approx |Q^{in}.q[$victim$]|$, where the victim explores some vertexes that were ALSO stolen.
+This does not affect correctness, it only slightly impacts performance.
 
 \subsection{}
-- One vertex can be the end point of many vertexes. So, one vertex can be multiple times in $Q^{in}$. In case of stealing, due to overlapping of execution thief and victim may process the same vertex. So that same vertex can the multiple times in $Q^{in}$.
+- One vertex can be the end point of many vertexes. So, one vertex can be multiple times in $Q^{in}$. In case of stealing, due to overlapping of execution thief and victim may process the same vertex. So that same vertex can exist multiple times in $Q^{in}$.
 
-- Since one vertex can point only once to a particular vertex. So, one vertex can not be more than one time in any $Q^{in}.q[i]$. In case of stealing, thief may work on a vertex {\it v} which has edges to the vertexes is already explored earlier. In that case also, since the thief already discovered and updated d[.] of those vertexes earlier it will never add to the $Q^{in}.q[victim]$. So, any vertex can not be more than once in any queue of $Q^{in}$ \\
+- So, one vertex can not be more than one time in any $Q^{in}.q[i]$ because the check on line 5 of bfs-thread (and a single queue is serialized). It may end up in different queues (see race conditions above).
 
 - We can add an additional field {\it c[v]} for each vertex {\it v} which will keep the track of the processor by which it discovered. i.e. $\mathbf{c[v] = i}$ in between line 6-7 in PARALLEL-BFS-THREAD.
 
-And before expanding a vertex we check whether the vertex is discovered by this thread or not by checking {\it c[v]}. i.e. we can add \xif $\mathbf{(c[v] = i)}$ before \xfor loop at line 4 in PARALLEL-BFS-THREAD. So, only the processor who have won in the race condition for vertex v has right to expand it.\\
+And before expanding a vertex we check whether the vertex is discovered by this thread or not by checking {\it c[v]}. i.e. we can add \xif $\mathbf{(c[v] = i)}$ before \xfor loop at line 4 in PARALLEL-BFS-THREAD. So, only the processor who have won in the race condition for vertex v has right to expand it.\\  Note this does not affect correctness because exactly one processor will win the race (if it happens).
 
 - $Q^{in}$ holds the vertices in the current BFS level. So, any vertex {\it v} in $Q^{in}$ implies that {\it d[v]} is not infinity. Now it may happen that {\it v} is adjacent to any other vertex in $Q^{in}$. Since, {\it d[v]} is not infinity so it can not be added to $Q^{in}$ in any other successive iteration by any thread.      
 
 \subsection{}
+We consider phases of $p$ steals each.
 Assume $F_i = \ceil {\frac {|q_i|}{MIN-STEAL-SIZE}}$
 
-$W_i = {F_i}^2$
+$W_i = {F_i}^2$\\
 Indicator random variable \[
 S_i = \begin{cases}
-1 , $ No steal attempts on this processor$\\
+1 , $ No steal attempts on this processor during this phase$\\
 0 , $  otherwise$
 \end{cases}
 \]
 
 $X_i = W_i S_i$
 
-So, potential drop = $W_i - (\frac{W_i}{4}) - (\frac{W_i}{4}) = \frac{W_i}{2}$
+So, when a steal attempt happens on a victim processor, the potential of the whole system drops by at least
+$W_i - (\frac{W_i}{4}) - (\frac{W_i}{4}) = \frac{W_i}{2}$
 
 $E[S_i] = 1 - {(1-\frac{1}{p})}^p \geq (1-\frac{1}{e}) \geq \frac{1}{2}$
 
@@ -207,7 +212,7 @@ E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \fra
 \]
 
 By Markov's inequality,\\
-\[Pr \left( X < \beta W \right) = Pr \left( W - X > (1 - \beta)W \right) < \frac {E \left[ W - X \right]}{\left(1 - \beta \right)  E[W]} < \frac {1}{\left(1 - \beta \right) e }
+\[Pr \left( X < \beta [W] \right) = Pr \left( W - X > (1 - \beta)[W] \right) < \frac {E \left[ [W] - X \right]}{\left(1 - \beta \right)  E[W]} < \frac {1}{\left(1 - \beta \right) e }
 \] \\\\\\\\
 
 
