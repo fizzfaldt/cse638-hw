@@ -139,9 +139,11 @@ void Queue::dequeue(int *node, int *edge) {
             // Done with this node.
             head_node++;
             head_edge = 0;
-            candidate_node = (*q)[head_node];
         }
-        assert(g->weight(candidate_node, name) > 0);
+        if (head_node < limit_node) {
+            candidate_node = (*q)[head_node];
+            assert(g->weight(candidate_node, name) > 0);
+        }
         if (head_node < limit_node-1  // This isn't the last node.
                 || head_edge < limit_edge ) {  // This is the last node, but not last edge
             *node = head_node;
@@ -485,8 +487,13 @@ void Graph::parallel_bfs_thread(int i) {
             int v;
             q_in.dequeue(&u, &v_index);
             while (u != INVALID) {
-                if (!opt_c || owner[u] == name_in) {
+                if (adj[u].size() > 0 &&
+                        (!opt_c || owner[u] == name_in)) {
+                    assert(v_index >= 0);
+                    assert(v_index < (int)adj[u].size());
                     v = adj[u][v_index];
+                    assert(v >= 0);
+                    assert(v < n);
                     if (d[v] == INFINITY) {
                         d[v] = d[u] + 1;
                         owner[v] = name_out;
@@ -688,7 +695,7 @@ int cilk_main(int argc, char *argv[]) {
     bool opt_h = atoi(argv[4]);
     bool do_parallel = atoi(argv[5]);
 
-    int max_steal_attempts_mult = 2; //random() & 0xFFFF;
+    int max_steal_attempts_mult = 0; //random() & 0xFFFF;
     int min_steal_size = 2;
 
     Problem p(opt_c, opt_g, opt_h);
