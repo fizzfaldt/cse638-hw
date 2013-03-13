@@ -85,27 +85,42 @@ bool Queue::is_empty(void) {
     return head_pair >= limit_pair;
 }
 
-void Queue::enqueue(int node) {
-    assert(is_output);
-    assert(!opt_g);
-
-    int limit = get_limit();
-    assert(limit == (int)q->size());
-    assert(limit < (int)q->capacity());
-    q->push_back(node);
-    set_limit(limit + 1);
-}
-
-void Queue::enqueue(int node, int num_edges) {
-    assert(is_output);
+void Queue::set_edge_limit(void) {
+    assert(!is_output);
     assert(opt_g);
 
+    int head_node, head_edge;
+    int limit_node, limit_edge;
+    get_head(&head_node, &head_edge);
+    get_limit(&limit_node, &limit_edge);
+    if (head_node < limit_node) {
+        // At least one item.
+        assert(head_edge == 0);
+        assert(limit_edge == 0);
+        int u = (*q)[limit_node-1];
+        limit_edge = g->weight(u, name);
+        set_limit(limit_node, limit_edge);
+    } else {
+        head_pair = limit_pair;
+    }
+    
+}
+
+void Queue::enqueue(int node) {
+    assert(is_output);
+    assert(node >= 0);
+    assert(node != INVALID);
+    assert(node != INFINITY);
+
     int limit = get_limit();
     assert(limit == (int)q->size());
     assert(limit < (int)q->capacity());
     q->push_back(node);
-    //TODO: call 2 value one.. this is a bug
-    set_limit(limit + 1, num_edges);
+    if (opt_g) {
+        set_limit(limit + 1, 0);
+    } else {
+        set_limit(limit + 1);
+    }
 }
 
 int Queue::dequeue(void) {
@@ -143,9 +158,12 @@ void Queue::dequeue(int *node, int *edge) {
         if (head_node < limit_node) {
             candidate_node = (*q)[head_node];
             assert(g->weight(candidate_node, name) > 0);
-            if (head_node < limit_node-1  // This isn't the last node.
-                    || head_edge < limit_edge ) {  // This is the last node, but not last edge
-                *node = head_node;
+            assert(head_edge <= g->weight(candidate_node, name));
+            assert(head_node < limit_node-1
+                    || limit_edge <= g->weight(candidate_node, name));
+            if (head_edge < g->weight(candidate_node, name)
+                && (head_node < limit_node-1 || head_edge < limit_edge)) {
+                *node = candidate_node;
                 *edge = head_edge;
                 set_head(head_node, head_edge+1);
                 return;
@@ -159,14 +177,28 @@ void Queue::dequeue(int *node, int *edge) {
 }
 
 int Queue::get_head(void) {
-    return (int)(head_pair >> 32);
+    int num = (int)(head_pair >> 32);
+
+    assert(num >= 0);
+    assert(num != INVALID);
+    assert(num != INFINITY);
+    return num;
 }
 
 int Queue::get_limit(void) {
-    return (int)(limit_pair >> 32);
+    int num = (int)(limit_pair >> 32);
+
+    assert(num >= 0);
+    assert(num != INVALID);
+    assert(num != INFINITY);
+    return num;
 }
 
 void Queue::set_head(int head) {
+    assert(head >= 0);
+    assert(head != INVALID);
+    assert(head != INFINITY);
+
     assert(!opt_g);  //otherwise use 2-arg function.
     assert((head_pair & 0xFFFFFFFFLL) == 0);  // No edge info
     assert(head >= 0);
@@ -174,6 +206,10 @@ void Queue::set_head(int head) {
 }
 
 void Queue::set_limit(int limit) {
+    assert(limit >= 0);
+    assert(limit != INVALID);
+    assert(limit != INFINITY);
+
     assert(!opt_g);  //otherwise use 2-arg function.
     assert((limit_pair & 0xFFFFFFFFLL) == 0);  // No edge info
     assert(limit >= 0);
@@ -186,7 +222,11 @@ void Queue::get_head(int *node, int *edge) {
     *node = static_cast<int>(copied >> 32);
     *edge = static_cast<int>(copied & 0xFFFFFFFFLL);
     assert(*node >= 0);
+    assert(*node != INVALID);
+    assert(*node != INFINITY);
     assert(*edge >= 0);
+    assert(*edge != INVALID);
+    assert(*edge != INFINITY);
 }
 
 void Queue::get_limit(int *node, int *edge) {
@@ -195,23 +235,53 @@ void Queue::get_limit(int *node, int *edge) {
     *node = static_cast<int>(copied >> 32);
     *edge = static_cast<int>(copied & 0xFFFFFFFFLL);
     assert(*node >= 0);
+    assert(*node != INVALID);
+    assert(*node != INFINITY);
     assert(*edge >= 0);
+    assert(*edge != INVALID);
+    assert(*edge != INFINITY);
 }
 
 void Queue::set_head(int node, int edge) {
     assert(opt_g);  //otherwise use 1-arg function.
     assert(node >= 0);
+    assert(node != INVALID);
+    assert(node != INFINITY);
     assert(edge >= 0);
-    head_pair = static_cast<uint64_t>(node) << 32;
-    head_pair += edge;
+    assert(edge != INVALID);
+    assert(edge != INFINITY);
+    uint64_t num = static_cast<uint64_t>(node) << 32;
+    num |= static_cast<uint64_t>(edge);
+    head_pair = num;
+
+#if 1
+    //WILL FAIL WITH MULTITHREADING!!!
+    int nodetest, edgetest;
+    get_head(&nodetest, &edgetest);
+    assert(nodetest == node);
+    assert(edgetest == edge);
+#endif
 }
 
 void Queue::set_limit(int node, int edge) {
     assert(opt_g);  //otherwise use 1-arg function.
     assert(node >= 0);
+    assert(node != INVALID);
+    assert(node != INFINITY);
     assert(edge >= 0);
-    limit_pair = static_cast<uint64_t>(node) << 32;
-    limit_pair += edge;
+    assert(edge != INVALID);
+    assert(edge != INFINITY);
+    uint64_t num = static_cast<uint64_t>(node) << 32;
+    num |= static_cast<uint64_t>(edge);
+    limit_pair = num;
+
+#if 1
+    //WILL FAIL WITH MULTITHREADING!!!
+    int nodetest, edgetest;
+    get_limit(&nodetest, &edgetest);
+    assert(nodetest == node);
+    assert(edgetest == edge);
+#endif
 }
 
 void Queue::try_steal(Queue &victim, int min_steal_size) {
@@ -397,11 +467,20 @@ unsigned long long Graph::computeChecksum(void) {
     cilk_for (int i = 0; i < n; ++i) {
         chksum += d[i] == INFINITY ? n : d[i];
     }
-#if 1
+#if 0
+    int mind = INT_MAX;
+    int maxd = INT_MIN;
     unsigned long long chksum_ser = 0;
     for (int i = 0; i < n; ++i) {
-        chksum_ser += d[i] == INFINITY ? n : d[i];
+        assert(d[i] >= 0);
+        int change = d[i] == INFINITY ? n : d[i];
+        chksum_ser += change;
+        mind = std::min(mind, change);
+        maxd = std::max(maxd, change);
     }
+    fprintf(stderr, "min=%d, max=%d\n", mind, maxd);
+    fflush(stderr);
+
     assert(chksum.get_value() == chksum_ser);
 #endif
 
@@ -487,6 +566,8 @@ void Graph::parallel_bfs_thread(int i) {
             int v;
             q_in.dequeue(&u, &v_index);
             while (u != INVALID) {
+                assert(d[u] >= 0);
+                assert(d[u] != INFINITY);
                 if (adj[u].size() > 0 &&
                         (!opt_c || owner[u] == name_in)) {
                     assert(v_index >= 0);
@@ -496,9 +577,10 @@ void Graph::parallel_bfs_thread(int i) {
                     assert(v < n);
                     if (d[v] == INFINITY) {
                         d[v] = d[u] + 1;
+                        assert(d[v] >= 0);
                         owner[v] = name_out;
                         if (adj[v].size() > 0) {
-                            q_out.enqueue(v, adj[v].size());
+                            q_out.enqueue(v);
                         }
                     }
                 }
@@ -542,6 +624,11 @@ int Graph::parallel_bfs(int s) {
             owner[u] = INVALID;
         }
     }
+#if 0
+    fprintf(stderr, "setting d[%d] source = 0. n=%d\n", s, n);
+    fflush(stderr);
+#endif
+    
     d[s] = 0;
     if (opt_c) {
         owner[s] = 0;
@@ -555,12 +642,11 @@ int Graph::parallel_bfs(int s) {
     }
 
     (*qs_in)[0].set_role(Queue::OUTPUT);
-    if (opt_g) {
-        (*qs_in)[0].enqueue(s, adj[s].size());
-    } else {
-        (*qs_in)[0].enqueue(s);
-    }
+    (*qs_in)[0].enqueue(s);
     (*qs_in)[0].set_role(Queue::INPUT);
+    if (opt_g) {
+        (*qs_in)[0].set_edge_limit();
+    }
 #if 1
     assert(!qs_are_empty());
 #endif
@@ -589,16 +675,23 @@ int Graph::parallel_bfs(int s) {
             cilk_sync;
         }
 #if 1
-        void *a = (void*)qs_in;
-        void *b = (void*)qs_out;
+        intptr_t a = (intptr_t)qs_in;
+        intptr_t b = (intptr_t)qs_out;
 #endif
-        swap(qs_in, qs_out);
+        std::vector<Queue> *temp;
+        temp = qs_in;
+        qs_in = qs_out;
+        qs_out = temp;
+
 #if 1
-        assert((void*)qs_in == b);
-        assert((void*)qs_out == a);
+        assert((intptr_t)qs_in == b);
+        assert((intptr_t)qs_out == a);
 #endif
         cilk_for(int i = 0; i < p; i++) {
             (*qs_in)[i].set_role(Queue::INPUT);
+            if (opt_g) {
+                (*qs_in)[i].set_edge_limit();
+            }
             (*qs_out)[i].set_role(Queue::OUTPUT);
             (*qs_out)[i].reset();
         }
@@ -673,10 +766,10 @@ void Problem::run(bool parallel) {
         } else {
             maxd = g.serial_bfs(sources[s]);
         }
-        printf("%d %lld\n", maxd, g.computeChecksum());
+        printf("%d %llu\n", maxd, g.computeChecksum());
 #if 0
-//        fprintf(stderr, "QUITTING\n");
-//        break;
+        fprintf(stderr, "QUITTING\n");
+        break;
 #endif
     }
 }
@@ -695,7 +788,7 @@ int cilk_main(int argc, char *argv[]) {
     bool opt_h = atoi(argv[4]);
     bool do_parallel = atoi(argv[5]);
 
-    int max_steal_attempts_mult = 0; //random() & 0xFFFF;
+    int max_steal_attempts_mult = 2; //random() & 0xFFFF;
     int min_steal_size = 2;
 
     Problem p(opt_c, opt_g, opt_h);

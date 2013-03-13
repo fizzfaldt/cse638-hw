@@ -65,6 +65,7 @@ class Queue {
         void lock_for_stealing(void);
         bool try_lock_for_stealing(void);
         void unlock_for_stealing(void);
+        void set_edge_limit(void);
         int get_name(void);
 };
 
