@@ -189,21 +189,23 @@ And before expanding a vertex we check whether the vertex is discovered by this 
 - $Q^{in}$ holds the vertices in the current BFS level. So, any vertex {\it v} in $Q^{in}$ implies that {\it d[v]} is not infinity. Now it may happen that {\it v} is adjacent to any other vertex in $Q^{in}$. Since, {\it d[v]} is not infinity so it can not be added to $Q^{in}$ in any other successive iteration by any thread.      
 
 \subsection{}
-We consider phases of $p$ steals each.
-Assume $F_i = \ceil {\frac {|q_i|}{MIN-STEAL-SIZE}}$
+We consider phases of $p$ steals each.\\
+Let $F_i = \ceil {\frac {|q_i|}{MIN-STEAL-SIZE}}$
 
-$W_i = {F_i}^2$\\
-Indicator random variable \[
+The potential of $Q_i = W_i = {F_i}^2$\\
+Let \[
 S_i = \begin{cases}
 1 , $ No steal attempts on this processor during this phase$\\
 0 , $  otherwise$
 \end{cases}
 \]
 
-$X_i = W_i S_i$
+When at least one steal attempt happens on a victim processor, the potential of the whole system drops by at least
+$W_i - (\frac{W_i}{4}) - (\frac{W_i}{4}) = \frac{W_i}{2}$ (Trivially for empty queues).
 
-So, when a steal attempt happens on a victim processor, the potential of the whole system drops by at least
-$W_i - (\frac{W_i}{4}) - (\frac{W_i}{4}) = \frac{W_i}{2}$
+$X_i = W_i S_i$ is the portion of the potential that was involved in attempted steals.
+The potential drop of the whole system $\ge X_i/2$.
+
 
 $E[S_i] = 1 - {(1-\frac{1}{p})}^p \geq (1-\frac{1}{e}) \geq \frac{1}{2}$
 
@@ -216,20 +218,9 @@ By Markov's inequality,\\
 \] \\\\\\\\
 
 
-The probability that no ball lands in bin $i$ is, $Pr ( X_i = 0 ) = \left( 1 - \frac{1}{p} \right)^p < \frac {1}{e}$.\\
-The expected value of $X_i$ is, $E \left[ X_i \right] = 0 \times Pr =\left( X_i = 0 \right) + W_i \times 
-Pr =\left( X_i \ne 0 \right) > \left( 1 - \frac{1}{e} \right) W_i$.\\
-\[
-E \left[ X \right] = \sum \limits_{i=1}^p E \left[ X_i \right] > \left( 1 - \frac{1}{e} \right) \sum \limits_{i=1}^p W_i >\left( 1 - \frac{1}{e} \right) W = \left( 1 - \frac{1}{e} \right) E\left[ W \right] 
-\]
-\[
-E \left[ W - X \right] < \frac {W}{e}
-\]
-
-
 Consider time steps, $i$ and $j$ such that $j > i$ and at least p steal attempts occur between time steps i (inclusive) and j (exclusive) then,
 \[
-Pr \left( \Phi_i - \Phi_j \right)  > \frac {1}{4}.
+    Pr \left( \Phi_i - \Phi_j > \frac{\Phi_i}{4}\right)  > \frac {1}{4}.
 \]
 \label{thm:phases}
 
