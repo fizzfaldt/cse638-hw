@@ -2,7 +2,7 @@
 
 #$ -V
 #$ -cwd
-#$ -q development
+#$ -q normal
 #$ -pe 12way 12			
 #$ -N a
 #$ -o output_a
@@ -13,4 +13,4 @@
 
 export PATH=$PATH:$HOME/cilk/bin
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/cilk/lib
-./a.out sample-01-in.txt  0 0 0 1 4 64 > serial_bfs_output_parallel
+./a.out  /work/01905/rezaul/CSE638/HW1/turn-in/rmat1B-in.txt 0 0 0 1 4 64 > parallel/rmat1B-out.txt 2>parallel/rmat1B-err.txt
