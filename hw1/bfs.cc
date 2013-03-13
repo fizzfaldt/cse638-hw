@@ -22,8 +22,8 @@
 #endif
 
 #include "bfs.h"
-#define cilkrts_get_nworkers 12
 using namespace std;
+cilk::context ctx;
 
 
 Queue::Queue(void) :
@@ -85,19 +85,27 @@ bool Queue::is_empty(void) {
     return head_pair >= limit_pair;
 }
 
-void Queue::enqueue(int value) {
+void Queue::enqueue(int node) {
     assert(is_output);
+    assert(!opt_g);
 
     int limit = get_limit();
     assert(limit == (int)q->size());
     assert(limit < (int)q->capacity());
-    q->push_back(value);
-    if (opt_g) {
-        //TODO: call 2 value one.. this is a bug
-        set_limit(limit + 1);
-    } else {
-        set_limit(limit + 1);
-    }
+    q->push_back(node);
+    set_limit(limit + 1);
+}
+
+void Queue::enqueue(int node, int num_edges) {
+    assert(is_output);
+    assert(opt_g);
+
+    int limit = get_limit();
+    assert(limit == (int)q->size());
+    assert(limit < (int)q->capacity());
+    q->push_back(node);
+    //TODO: call 2 value one.. this is a bug
+    set_limit(limit + 1, num_edges);
 }
 
 int Queue::dequeue(void) {
@@ -211,7 +219,7 @@ void Queue::try_steal(Queue &victim, int min_steal_size) {
     assert(min_steal_size >= 2); //Otherwise what does stealing half mean?
 
     //Don't steal if you have work.
-    assert(this->head_pair == this->limit_pair);
+    assert(this->head_pair >= this->limit_pair);
 
     int vic_head = victim.get_head();
     int vic_limit = victim.get_limit();
@@ -345,8 +353,7 @@ Graph::Graph(bool opt_c, bool opt_g, bool opt_h) :
     adj(),
     d(),
     owner(),
-    //p(cilkrts_get_nworkers()),
-    p(12),
+    p(ctx.get_worker_count()),
     qs1(p, Queue()),
     qs2(p, Queue()),
     qs_in(&qs1),
@@ -354,6 +361,8 @@ Graph::Graph(bool opt_c, bool opt_g, bool opt_h) :
     opt_c(opt_c),
     opt_g(opt_g),
     opt_h(opt_h) {
+//    cilk::context ctx;
+//    p = ctx->get_worker_count();
     srandom(time(NULL));
 }
 
@@ -437,7 +446,7 @@ int Graph::random_p(void) {
 }
 
 bool Graph::qs_are_empty(void) {
-    cilk::reducer_opand< bool > empty;
+    cilk::reducer_opand< bool > empty(true);
 
     cilk_for (int i = 0; i < p; ++i) {
         empty &= (*qs_in)[i].is_empty();
@@ -482,7 +491,7 @@ void Graph::parallel_bfs_thread(int i) {
                         d[v] = d[u] + 1;
                         owner[v] = name_out;
                         if (adj[v].size() > 0) {
-                            q_out.enqueue(v);
+                            q_out.enqueue(v, adj[v].size());
                         }
                     }
                 }
@@ -539,7 +548,11 @@ int Graph::parallel_bfs(int s) {
     }
 
     (*qs_in)[0].set_role(Queue::OUTPUT);
-    (*qs_in)[0].enqueue(s);
+    if (opt_g) {
+        (*qs_in)[0].enqueue(s, adj[s].size());
+    } else {
+        (*qs_in)[0].enqueue(s);
+    }
     (*qs_in)[0].set_role(Queue::INPUT);
 #if 1
     assert(!qs_are_empty());
@@ -616,10 +629,25 @@ Problem::Problem(bool opt_c, bool opt_g, bool opt_h) :
     sources() {
 }
 
+int ceil_lg(int n) {
+    assert(n>0);
+    int64_t x = 1;
+    int p = 0;
+    while (x < n) {
+        p++;
+        x *= 2;
+    }
+    return max(p, 1);
+}
+
 void Problem::init(
-        int max_steal_attempts, int min_steal_size, string filename) {
+        int max_steal_attempts_mult, int min_steal_size, string filename) {
     ifstream ifs(filename.c_str());
     ifs >> n >> m >> r;
+    int p = ctx.get_worker_count();
+
+    int max_steal_attempts = ceil_lg(p) * p * max_steal_attempts_mult;
+
     g.init(max_steal_attempts, min_steal_size, n, m, ifs);
     for (int i = 0; i < r; ++i) {
         int s;
@@ -660,11 +688,11 @@ int cilk_main(int argc, char *argv[]) {
     bool opt_h = atoi(argv[4]);
     bool do_parallel = atoi(argv[5]);
 
-    int max_steal_attempts = 0; //random() & 0xFFFF;
-    int min_steal_size = random() & 0xFF;
+    int max_steal_attempts_mult = 2; //random() & 0xFFFF;
+    int min_steal_size = 2;
 
     Problem p(opt_c, opt_g, opt_h);
-    p.init(max_steal_attempts, min_steal_size, file_name);
+    p.init(max_steal_attempts_mult, min_steal_size, file_name);
     p.run(do_parallel);
 
     error = clock_gettime(CLOCK_REALTIME, &end_t);

@@ -55,7 +55,8 @@ class Queue {
         void init(int n, int name, Graph *g, bool opt_g);
         void set_role(bool is_output);
         void reset(void);
-        void enqueue(int value);
+        void enqueue(int node);
+        void enqueue(int node, int num_edges);
         int dequeue(void);
         void dequeue(int *node, int *edge);
         void try_steal(Queue &victim, int min_steal_size);
