@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <errno.h>
+
 #ifdef __cilkplusplus
 #include <cilk.h>
 #include <reducer_opadd.h>
@@ -19,6 +20,7 @@
 #include <reducer_max.h>
 //#include <cilk_mutex.h>
 #endif
+
 #include "bfs.h"
 #define cilkrts_get_nworkers 12
 using namespace std;
