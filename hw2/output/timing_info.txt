@@ -1,0 +1,17 @@
+as-skitter-2j-CC-1-out.txt & 28.359662 & 17.177 & 41.24
+
+com-amazon-2j-CC-1-out.txt & 2.891122 & 1.591265 & 3.17
+
+com-dblp-2j-CC-1-out.txt & 3.281750 & 1.7401 & 3.64
+
+com-lj-2j-CC-1-out.txt & 93.301557 & 68.3 & 136.84
+
+com-orkut-pcc2.txt & 254.32 & 231.422784 & 451.85
+
+parallel_com-ca-2j-CC-1-out.txt & 0.646374 &  0.655 & 1.247 
+
+roadNet-CA-2j-CC-1.txt & 13.854537 & 5.323 & 15.99
+
+roadNet-PA-2j-CC-1.txt & 5.665667 & 2.84 & 8.46
+
+roadNet-TX-2j-CC-1.txt & 8.973965 & 3.57 & 10.525

@@ -1,0 +1,78 @@
+==> as-skitter-2j-CC-1-out.txt <==
+Time taken: 28.359662
+
+==> com-amazon-2j-CC-1-out.txt <==
+Time taken: 2.891122
+
+==> com-dblp-2j-CC-1-out.txt <==
+Time taken: 3.281750
+
+==> com-lj-2j-CC-1-out.txt <==
+Time taken: 93.301557
+
+==> parallel_com-ca-2j-CC-1-out.txt <==
+Time taken: 0.646374
+
+==> roadNet-CA-2j-CC-1.txt <==
+Time taken: 13.854537
+
+==> roadNet-PA-2j-CC-1.txt <==
+Time taken: 5.665667
+
+==> roadNet-TX-2j-CC-1.txt <==
+Time taken: 8.973965
+==> as-skitter-pcc2.txt <==
+Time taken: 17.177322
+
+==> com-amazon-pcc2.txt <==
+Time taken: 1.591265
+
+==> com-dblp-pcc2.txt <==
+Time taken: 1.740110
+
+==> com-lj-pcc2.txt <==
+Time taken: 68.389080
+
+==> com-orkut-pcc2.txt <==
+Time taken: 231.422784
+
+==> parallel_com-ca-pcc2.txt <==
+Time taken: 0.655993
+
+==> parallel_com-youtube-out-pcc2.txt <==
+2
+
+==> roadNet-CA-pcc2.txt <==
+Time taken: 5.323779
+
+==> roadNet-PA-pcc2.txt <==
+Time taken: 2.841188
+
+==> roadNet-TX-pcc2.txt <==
+Time taken: 3.572870
+==> as-skitter-2j-CC-2-out.txt <==
+Time taken: 41.249171
+
+==> com-amazon-2j-CC-2-out.txt <==
+Time taken: 3.170039
+
+==> com-dblp-2j-CC-2-out.txt <==
+Time taken: 3.645291
+
+==> com-lj-2j-CC-2-out.txt <==
+Time taken: 136.843666
+
+==> com-orkut-2j-CC-2-out.txt <==
+Time taken: 451.859205
+
+==> parallel_com-ca-2j-CC-2-out.txt <==
+Time taken: 1.247913
+
+==> roadNet-CA-2j-CC-2-out.txt <==
+Time taken: 15.997605
+
+==> roadNet-PA-2j-CC-2-out.txt <==
+Time taken: 8.462187
+
+==> roadNet-TX-2j-CC-2-out.txt <==
+Time taken: 10.525149
