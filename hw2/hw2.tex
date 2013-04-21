@@ -309,11 +309,18 @@ $P \left[ X \geq \frac{|V|}{16} \right] \geq 1 - {1 \over {e^{|V| / 32}}}$.
  {\em light}. At recursion depth $d$ of \func{Par-Randomized-CC-3},
  let $r_d$ be the expected number of heavy edges that become light.
  Prove that for each $d \in [0, d_{max}]$, $r_d \leq {\alpha}^{d} \cdot n$.
- 
+\\
+The question is wrong. Consider the complete graph as an input. At the beginning all edges and vertices are heavy. The first time you run random hook, the expected number of vertices that lose PhD status is at least $\frac{1}{4} n$. And so in the next level at least  $\frac{1}{4} n (n-1) \not \leq \alpha^d n$ heavy edges become light.
+ \\
  \item[$(h)$] {\bf{[ 10 Points ]}} Prove that in the call to
  \func{Par-Randomized-CC-2} in line 21 of \func{Par-Randomized-CC-3},
  the expected number of edges in $E'$ is $\Oh{n}$.
 
+See part(g). Expected number of heavy edges at the start of level $d  \leq {\frac{9}{16}}^d n$
+Expected number of heavy edges at the start of level $d_{max}  \leq {\frac{9}{16}}^d_{max} n \leq \alpha^{2d_{max}} n \leq n^{\frac{1}{2}$
+\[
+\]
+\\
  \item[$(i)$] {\bf{[ 10 Points ]}} Compute the expected work
  and span of \func{Par-Randomized-CC-3}.
 
