@@ -1,0 +1,728 @@
+\documentclass[11pt]{article}
+
+\usepackage{epsfig}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{theorem}
+\usepackage{color}
+%\usepackage{times}
+\usepackage{graphicx}
+\usepackage{url}
+
+%\usepackage{layout}% if you want to see the layout parameters
+                     % and now use \layout command in the body
+
+% This is the stuff for normal spacing
+\makeatletter
+ \setlength{\textwidth}{6.5in}
+ \setlength{\oddsidemargin}{0in}
+ \setlength{\evensidemargin}{0in}
+ \setlength{\topmargin}{0.25in}
+ \setlength{\textheight}{8.25in}
+ \setlength{\headheight}{0pt}
+ \setlength{\headsep}{0pt}
+ \setlength{\marginparwidth}{59pt}
+
+ \setlength{\parindent}{0pt}
+ \setlength{\parskip}{5pt plus 1pt}
+ \setlength{\theorempreskipamount}{5pt plus 1pt}
+ \setlength{\theorempostskipamount}{0pt}
+ \setlength{\abovedisplayskip}{8pt plus 3pt minus 6pt}
+
+ \renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                   {2ex plus -1ex minus -.2ex}%
+                                   {1.3ex plus .2ex}%
+                                   {\normalfont\Large\bfseries}}%
+ \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\large\bfseries}}%
+ \renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+ \renewcommand{\paragraph}{\@startsection{paragraph}{4}{0mm}%
+                                    {1ex \@plus1ex \@minus.2ex}%
+                                    {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+ \renewcommand{\subparagraph}{\@startsection{subparagraph}{5}{\parindent}%
+                                       {2.0ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                      {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\newenvironment{proof}{{\bf Proof:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofof}[1]{{\bf Proof of #1:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofofnobox}[1]{{\bf#1:  }}{}
+\newenvironment{example}{{\bf Example:  }}{\hfill\rule{2mm}{2mm}}
+%\renewcommand{\thesection}{\lecnum.\arabic{section}}
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+%\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\thefigure}{\arabic{figure}}
+
+\newtheorem{fact}{Fact}[section]
+\newtheorem{lemma}[fact]{Lemma}
+\newtheorem{theorem}[fact]{Theorem}
+\newtheorem{definition}[fact]{Definition}
+\newtheorem{corollary}[fact]{Corollary}
+\newtheorem{proposition}[fact]{Proposition}
+\newtheorem{claim}[fact]{Claim}
+\newtheorem{exercise}[fact]{Exercise}
+
+% math notations
+\newcommand{\R}{\ensuremath{\mathbb R}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\F}{\ensuremath{\mathcal F}}
+\newcommand{\SymGrp}{\ensuremath{\mathfrak S}}
+
+\newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor#1\right\rfloor}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\polylog}{\operatorname{polylog}}
+
+% asymptotic notations
+\newcommand{\Oh}[1]{{\mathcal O}\left({#1}\right)}
+\newcommand{\LOh}[1]{{\mathcal O}\left({#1}\right.}
+\newcommand{\ROh}[1]{{\mathcal O}\left.{#1}\right)}
+\newcommand{\oh}[1]{{o}\left({#1}\right)}
+\newcommand{\Om}[1]{{\Omega}\left({#1}\right)}
+\newcommand{\om}[1]{{\omega}\left({#1}\right)}
+\newcommand{\Th}[1]{{\Theta}\left({#1}\right)}
+
+
+% pseudocode notations
+\newcommand{\xif}{{\bf{\em{if~}}}}
+\newcommand{\xthen}{{\bf{\em{then~}}}}
+\newcommand{\xelse}{{\bf{\em{else~}}}}
+\newcommand{\xelseif}{{\bf{\em{elif~}}}}
+\newcommand{\xfi}{{\bf{\em{fi~}}}}
+\newcommand{\xendif}{{\bf{\em{endif~}}}}
+\newcommand{\xcase}{{\bf{\em{case~}}}}
+\newcommand{\xendcase}{{\bf{\em{endcase~}}}}
+\newcommand{\xbreak}{{\bf{\em{break~}}}}
+\newcommand{\xfor}{{\bf{\em{for~}}}}
+\newcommand{\xto}{{\bf{\em{to~}}}}
+\newcommand{\xby}{{\bf{\em{by~}}}}
+\newcommand{\xdownto}{{\bf{\em{downto~}}}}
+\newcommand{\xdo}{{\bf{\em{do~}}}}
+\newcommand{\xrof}{{\bf{\em{rof~}}}}
+\newcommand{\xwhile}{{\bf{\em{while~}}}}
+\newcommand{\xendwhile}{{\bf{\em{endwhile~}}}}
+\newcommand{\xand}{{\bf{\em{and~}}}}
+\newcommand{\xor}{{\bf{\em{or~}}}}
+\newcommand{\xerror}{{\bf{\em{error~}}}}
+\newcommand{\xreturn}{{\bf{\em{return~}}}}
+\newcommand{\xparallel}{{\bf{\em{parallel~}}}}
+\newcommand{\xspawn}{{\bf{\em{spawn~}}}}
+\newcommand{\xsync}{{\bf{\em{sync~}}}}
+\newcommand{\xarray}{{\bf{\em{array~}}}}
+\newcommand{\T}{\hspace{0.5cm}}
+\newcommand{\m}{\mathcal}
+
+\def\sland{~\land~}
+\def\slor{~\lor~}
+\def\sRightarrow{~\Rightarrow~}
+
+\definecolor{gray}{rgb}{0.3,0.3,0.3}
+
+\def\comment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
+\def\lcomment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
+\def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
+\def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
+\def\func#1{\textrm{\bf{\sc{#1}}}}
+\def\funcbf#1{\textrm{\textbf{\textsc{#1}}}}
+
+\newcommand{\hide}[1]{}
+
+\newcommand{\prob}[1]{\ensuremath{\text{{\bf Pr}$\left[#1\right]$}}}
+\newcommand{\expct}[1]{\ensuremath{\text{{\bf E}$\left[#1\right]$}}}
+\newcommand{\Event}{{\mathcal E}}
+
+\newcommand{\mnote}[1]{\normalmarginpar \marginpar{\tiny #1}}
+
+\makeatletter
+   \newcommand\figcaption{\def\@captype{figure}\caption}
+   \newcommand\tabcaption{\def\@captype{table}\caption}
+\makeatother
+
+ \def\para#1{\vspace{0.2cm}\noindent{\bf{#1.}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document begins here %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\headings}[3]{{\large
+{\bf CSE638: Advanced Algorithms, Spring 2013} \hfill {{\bf Date:} #1}\\
+\rule[0.01in]{\textwidth}{0.025in}}
+%\hline
+\begin{center} {{\bf\huge{Homework \##2}}\\{\bf( Due: #3 )}} \end{center}
+%\thispagestyle{empty}
+}
+
+\begin{document}
+
+\headings{March 26}{2}{April 16}
+\newcommand{\lecnum}{5}  % Lecture Number
+
+
+
+
+\para{Task 1} {\bf{[ 40 Points ]}} {\bf Parallel BFS with Cilk's Work Stealing.}
+%
+ \begin{itemize}
+
+ \item[$(a)$] {\bf{[ 20 Points ]}} In homework 1 we analyzed and implemented
+parallel BFS algorithms based on randomized distributed work-stealing,
+and we explicitly implemented the work-stealing mechanism. Explain how
+you will reimplement the algorithm from part $1(f)$ of homework 1
+(without the modication for avoiding duplicate exploration) so
+that it uses Cilk's work-stealing scheduler for load balancing
+instead of your own work-stealing code. 
+
+ \item[$(b)$] {\bf{[ 20 Points ]}} Update the table you created
+for part $1(j)$ of homework 1 with the running times of your
+new implementation.
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c | c | }
+    \hline
+    Input File & $RT_{SBFS}$ & $RT_{PBFS^{(f)}}$ & $RT_{PBFS^{(g)}}$ & $SF_{PBFS^{(f)}}$ & $SF_{PBFS^{(g)}}$ & $T_{HW2}$ & $S_{HW2}$\\ \hline
+    cage14 & 1786 & 313 & 315.18 & 5.70 & 5.67 & 55.65 & 1 \\ \hline
+    cage15 & 1231 & 303.904 & 303.75 & 4.05 & 4.05 & 212.18 & 1 \\ \hline
+    freescale & 1835 & 223 & 253.00 & 8.22 & 7.25 & 218.56 & 1 \\ \hline
+	Wikipedia & 709 & 705.47 & 703 & 1.00 & 1.00 & 139.19 & 1 \\ \hline
+    kkt-power & 410 & 21.5 & 20.79 & 19.07 & 19.72 & 10.06 & 1 \\ \hline
+    RMAT100M & 3253 & 673.57 & 647.00 & 4.83 & 5.03 & 501.59 & 1 \\ \hline
+    RMAT1B & - & 2544.57 & - & - & - & 1 & 1 \\ \hline
+        
+    \end{tabular}
+    \caption {RT = Running Time, SBFS = Serial BFS, $PBFS^{(f)}$ = Parallel BFS for task 1(f), $PBFS^{(g)}$ = Parallel BFS for task 1(g) and SF = Speed Factor. Times are in seconds.}
+\end{center}
+\end {table}
+
+
+ \end{itemize}
+
+
+\para{Task 2} {\bf{[ 160 Points ]}} {\bf Parallel Connected Components.}
+%
+ \begin{itemize}
+
+ \item[$(a)$] {\bf{[ 10 Points ]}}
+ Consider the function \func{Random-Hook}$(~V, ~L, ~N ~)$ in Figure \ref{fi:pcc},
+ and assume that $V$ has no zero degree vertices.
+ Suppose we start with an empty set $Q$, and add edges to it as follows.
+ We traverse the vertices in $V$ in some order, and for each
+ $v \in V$ encountered in that order, we add  $\left( v, N[ v ] \right)$ 
+ to $Q$ provided the graph induced
+ by $Q \cup \left\{ \left( v, N[ v ] \right) \right\}$ does not
+ contain a cycle. Prove that $|Q| \geq \frac{|V|}{2}$.
+
+
+For an arbitrary graph that satisfies the required property let us assume for the sake of contradiction, the largest possible $Q$ is such that $|Q| < \frac{|V|}{2}$. $G' = (V, Q')$ is cycle free. Adding more edges will lead to the formation of a cycle in $G'$.\\
+\\
+Consider all the potential edges that can be added to graph $E' = \left\{ \left( v, N[ v ] \right), v \in V \right\}$. $ |E'| = |V|$, since each vertex $u$, has a unique $N[u]$.
+Clearly  $|Q| < \frac{|E'|}{2}$.\\
+\\
+If there are k edges in a graph, at most $2 \times k$ vertices can have an edge incident on them. So $G'$ has less than $|V|$ vertices that have an edge incident on them. There is atleast one non-isloated vertex v, that has no edge incident on it in $G'$.\\
+\\
+ The partition $V \setminus \left\{v \right\}, \left\{v \right\}$ in $G'$ form two cycle free components. Adding an edge between them does not create a cycle. Thus $\left( v, N[ v ] \right) $ can be added to $Q$ without creating a cycle. This contradicts our assumption that a maximal subset of edges $Q$, can have $|Q| < \frac{|V|}{2}$. Thus, $|Q| \geq \frac{|V|}{2}$.
+ \item[$(b)$] {\bf{[ 10 Points ]}} 
+ Consider the set $Q$ constructed in part $2(a)$. 
+ We say that an edge $\left( u, v \right) \in Q$ is a {\em hook} provided
+ $C[ u ] \neq C[ v ]$  right after step 3 of \func{Random-Hook}.
+%
+  Prove that for all $Q' \subset Q$, 
+ if one knows the {\em hook} status of all edges in $Q'$ that
+ still does not reveal anything about the hook status
+ of any edge in $Q \setminus Q'$.
+
+
+ \item[$(c)$] {\bf{[ 10 Points ]}} Explain why \func{Random-Hook}
+ (in Figure \ref{fi:pcc}) is superior to the random hooking  
+ technique we saw in the class (used in \func{Par-Randomized-CC}).
+\\
+\func{Par-Randomized-CC} can hook vertices to a root vertex such that it forms a star of depth at most $1$.
+ Also the expected number of edges thus hooked in a round is exactly $\frac{|E|}{2}$.\\
+In \func{Random-Hook} during the second hooking phase, a vertex $u$ hooked to root $v$
+ can in turn add a new vertex to the star. Thus the depth of a start can be at most $2$. 
+Also the number of vertices hooked in a round is at least $\frac{|V|}{4}$.
+\\ 
+ \item[$(d)$] {\bf{[ 10 Points ]}} Use your results from parts
+ $2(a)$--$2(c)$ to show that in any invocation of \func{Random-Hook}$(~V, ~L, ~N ~)$,
+ with probability at least $1 - {1 \over {e^{|V| / 32}}}$
+ at least $\frac{|V|}{16}$ vertices of $V$ will change
+ their $L$ values. 
+\\
+Let $X$ be the indicator random variable that represents whether $L$ value of a vertex changes.
+For $L$ value of a vertex to change, during the first phase of hooking, $C [v] = \func{HEAD}$ and  $C[ N[v] ] = \func{HEAD}$.\\
+ The $L$ value can change also during the second phase of hooking after flipping vertices that are not hooked.\\
+So the probability that $L$ value of a vertex changes is at least equal to the probaility that $L$ value changes during the first phase of hooking which is $\frac{1}{4}$.
+\\
+Thus expected number vertices for which $L$ value changes, $\mu = E[X] = |V| \times \frac{1}{4}$. $ \delta = 3 \over 4$.
+\\
+Applying, Chernoff Bound's lower tail:
+\[
+P \left[ X < \frac{|V|}{16} \right] < e^{\frac { \frac{|V|}{4} \times {\frac{3}{4}}^2} {2}} = e^{|V| / 32}
+\]
+
+Thus,
+$P \left[ X \geq \frac{|V|}{16} \right] \geq 1 - {1 \over {e^{|V| / 32}}}$.
+
+
+
+ \item[$(e)$] {\bf{[ 10 Points ]}} Use your result from part $2(d)$
+ to prove high probability bounds
+ for the work and span of \func{Par-Randomized-CC-2}. 
+ 
+ \item[$(f)$] {\bf{[ 15 Points ]}} Consider \func{Par-Randomized-CC-3}.
+ The algorithm repeatedly chooses a random sample (of geometrically decreasing
+ sizes) from the edges of the input graph, and uses the sample to identify vertices
+ (or supervertices) that have {\em potentially high degree} (PhD).
+ Each vertex of the graph starts with a PhD status, but loses
+ the status as soon as a chosen sample of edges fails to 
+ include an edge connecting that vertex with another vertex
+ with a PhD status. The \func{Random-Hook} function is called only on the vertices
+ that retain the PhD status. After a sufficient number of such
+ sampling and hooking rounds, the number of edges among the
+ supervertices reduce to a sufficiently small number. At that
+ point connected components among the supervertices are
+ found by calling \func{Par-Randomized-CC-2}. Now suppose
+ at recursion depth $d$ of \func{Par-Randomized-CC-3},
+ $n_d$ denotes the number of vertices/supervertices
+ in $V$ with a PhD status. Then $n_0$ is the number 
+ of vertices in the original input graph. Let $n = n_0$.
+ Prove that for each
+ $d \in [0, d_{max}]$, $n_d \leq {\alpha}^{2d} \cdot n$ w.h.p. in $n$, where 
+ $\alpha = \sqrt{\frac{15}{16}}$
+ and $d_{max} = \ceil{ \frac{1}{4} \log_{\frac{1}{\alpha}}{n} }$.
+
+ \item[$(g)$] {\bf{[ 15 Points ]}} We call an edge $(u, v)$ {\em heavy}
+ provided $PhD[ u ] = PhD[ v ] = \func{True}$, otherwise we call it
+ {\em light}. At recursion depth $d$ of \func{Par-Randomized-CC-3},
+ let $r_d$ be the expected number of heavy edges that become light.
+ Prove that for each $d \in [0, d_{max}]$, $r_d \leq {\alpha}^{d} \cdot n$.
+ 
+ \item[$(h)$] {\bf{[ 10 Points ]}} Prove that in the call to
+ \func{Par-Randomized-CC-2} in line 21 of \func{Par-Randomized-CC-3},
+ the expected number of edges in $E'$ is $\Oh{n}$.
+
+ \item[$(i)$] {\bf{[ 10 Points ]}} Compute the expected work
+ and span of \func{Par-Randomized-CC-3}.
+
+ \item[$(j)$] {\bf{[ 60 Points ]}} Implement \func{Par-Randomized-CC}
+ (the one we saw in the class), \func{Par-Randomized-CC-2} (from Figure \ref{fi:pcc})
+ and \func{Par-Randomized-CC-3} (from Figure \ref{fi:pcc-sampling}), and optimize
+ them. Create a table that compares the running
+ times of these three implementations using all cores. For each input file (in Appendix 1)
+ create a separate row in the table showing the running times of all three algorithms.
+
+ \item[$(k)$] {\bf{[ 20 Points ]}} Generate a {\tt Cilkview} strong scalability plot 
+ (see slides 15--18 of lecture 5) for each of the two parallel implementations from
+ part $(j)$ using the Live Journal graph (see Appendix 1) as input.
+
+ \end{itemize}
+
+
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+ \begin{minipage}{\textwidth}
+ \begin{center}
+ \framebox{
+ \begin{minipage}{\textwidth}
+ {\footnotesize
+ \medskip\noindent\func{Par-Randomized-CC-2}$(~V, ~E, ~L )$
+
+ \vspace{0.1cm}
+ \noindent
+ ({\color{gray} Input is an unweighted undirected graph with vertex set $V$ and 
+ edge set $E$. For each $v \in V$, $L[ v ]$ is set to $v$
+ before the invocation of this function. 
+ % We assume that $(u, v) \in E \Rightarrow (v, u) \in E$.  
+ When this function terminates, for each $v \in V$, $L[ v ]$
+ contains the unique id of the connected component containing $v$.
+ We call an edge $(u, v)$ {\em live} provided $L[ u ] \neq L[ v ]$.})
+
+ \noindent
+ \begin{enumerate}
+
+ \item \xif $|E| = 0$ \xthen \xreturn
+         \comment{no edge to contract} 
+
+ \item \xparallel \xfor each $(u, v) \in E$ \xdo $N[ u ] \gets v$,~ $N[ v ] \gets u$
+	\comment{try to associate the edge $(u, v)$ with $u$ and $v$}
+
+ \item \func{Random-Hook}$(~V, ~L, ~N ~)$
+        \comment{hook among vertices in $V$ based on the edges chosen in the previous step}
+
+ \item $V' \leftarrow \left\{~v~|~v \in V~ \wedge ~v = L[v] ~\right\}$
+        \comment{$V'$ contains only the roots after hooking}
+
+ \item $E' \leftarrow \left\{~( L[ u ], L[ v ])~|~(u, v) \in E~ \wedge ~L[u] \neq L[v] ~\right\}$
+           \lcomment{$E'$ contains only edges among roots,}
+
+           \rcomment{and no duplicate edges and self loops}
+
+ \item \func{Par-Randomized-CC-2}$(~V', ~E', ~L ~)$
+              \comment{recurse on the smaller instance}
+
+ \item \xparallel \xfor each $v \in V$ \xdo $L[ v ] \gets L[ L[ v ] ]$ 
+              \comment{map the solution back to the current instance}
+
+
+ \vspace{0.2cm}
+
+ \end{enumerate}
+
+ }
+ \end{minipage}
+ \vspace{0.1cm}
+ }
+
+
+ \framebox{
+ \begin{minipage}{\textwidth}
+ {\footnotesize
+ \medskip\noindent\func{Random-Hook}$(~V, ~L, ~N ~)$
+
+ \vspace{0.1cm}
+ \noindent
+ ({\color{gray} Input is an unweighted undirected graph with vertex set $V$.
+ For each $v \in V$, $L[ v ]$ is set to $v$
+ before the invocation of this function. 
+ For each $u \in V$, $N[ u ]$ is set to a $v$
+ such that $(u, v)$ is an edge in the graph.
+ This function randomly hooks vertices in $V$ to their neighbors 
+ in such a way that after the function terminates these vertices
+ form a set of disjoint stars. For each $v \in V$, $L[ v ]$ 
+ is set to $u$ (possibly $u = v$) provided $u$ is the center of the star containing $v$.})
+
+ \noindent
+ \begin{enumerate}
+
+ \item \xparallel \xfor each $u \in V$ \xdo 
+          \comment{for each vertex in $V$} 
+
+ \item \T $C_u \gets \func{Random}\left\{~ \func{Head},~ \func{Tail} ~\right\}$
+          \comment{toss a coin} 
+
+ \item \T $H_u \gets \func{False}$
+          \comment{record that this vertex has not yet been hooked} 
+
+ \item \xparallel \xfor each $u \in V$ \xdo 
+         \comment{for each vertex $u$ in $V$} 
+
+ \item \T $v \gets N[ u ]$
+	 \comment{will try to hook $u$ with $v = N[ u ]$}
+
+ \item \T \xif $C_u = \func{Tail}$ \xand $C_{v} = \func{Head}$ \xthen 
+         \comment{if $u$ tossed \func{Tail} and $v$ tossed \func{Head}}
+
+ \item \T\T $L[ u ] \gets v$
+         \comment{make $u$ point to $v$}
+
+ \item \T\T $H_u \gets \func{True}$,~ $H_{v} \gets \func{True}$
+         \comment{record that both $u$ and $v$ are hooked}
+
+ \item \xparallel \xfor each $u \in V$ \xdo 
+        \comment{manipulate the coin tosses to hook more in a second try}
+
+ \item \T \xif $H_{u} = \func{True}$ \xthen $C_u \gets \func{Head}$
+           \comment{if $u$ is already hooked, will try to hook unhooked vertices pointing to $u$}
+
+ \item \T \xelse \xif $C_u = \func{Tail}$ \xthen $C_u \gets \func{Head}$ \xelse $C_u \gets \func{Tail}$
+           \comment{if $u$ is not hooked, flip $C_u$}
+ 
+ \item \xparallel \xfor each $u \in V$ \xdo 
+         \comment{try to hook again}
+
+ \item \T $v \gets N[ u ]$
+	 \comment{will try to hook $u$ with $v = N[ u ]$}
+
+ \item \T \xif $C_u = \func{Tail}$ \xand $C_{v} = \func{Head}$ \xthen 
+         \comment{if $u$ has \func{Tail} and $v$ has \func{Head}}
+
+ \item \T\T $L[ u ] \gets L[ v ]$
+         \comment{make $u$ point to whatever $v$ is pointing to}
+
+ \vspace{0.2cm}
+
+ \end{enumerate}
+
+ }
+ \end{minipage}
+ \vspace{0.1cm}
+ }
+
+ \vspace{-0.2cm}
+ \caption{Parallel connected components (CC) on a graph.}
+ \label{fi:pcc}
+ \vspace{-0.3cm}
+ \end{center}
+ \end{minipage}
+ \end{figure*}
+
+
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+ \begin{minipage}{\textwidth}
+ \begin{center}
+ \framebox{
+ \begin{minipage}{\textwidth}
+ {\footnotesize
+ \medskip\noindent\func{Par-Randomized-CC-3}$(~V, ~E, ~L, ~PhD,~ N, ~U, ~d ~)$
+
+ \vspace{0.1cm}
+ \noindent
+ ({\color{gray} Input is an unweighted undirected graph with vertex set $V$ and 
+ edge set $E$.
+ The recursion depth of the function is given by $d$ which
+ is set to $0$ when the function is invoked for the first time. 
+ Let $n$ be the number of vertices in the graph when $d = 0$,
+ and $m = |E|$. Each $v \in V$ is an integer in $[1, n]$.
+ Pointers $L$ (label), $PhD$ (potentially high degree), $N$ (neighbor) and $U$ (updated) 
+ point to arrays $L[1 : n]$, $PhD[1 : n]$, $N[1 : n]$ and $U[1 : n]$,
+ respectively. For each $v \in [1, n]$, $L[ v ]$ is set to $v$,
+ and $PhD[ v ]$ is set to $\func{True}$ before the initial invocation of this function. 
+ When this function terminates, for each $v \in V$, $L[ v ]$
+ contains the unique id of the connected component containing $v$.
+ We assume that $\alpha = \sqrt{\frac{15}{16}}$ and 
+ $d_{max} = \ceil{ \frac{1}{4} \log_{\frac{1}{\alpha}}{n} }$.
+ We call an edge $(u, v)$ {\em live} provided $L[ u ] \neq L[ v ]$.
+ Edge $(u, v)$ is {\em heavy} provided $PhD[ u ] = PhD[ v ]$,
+ otherwise it is {\em light}.})
+
+ \noindent
+ \begin{enumerate}
+
+ \item \xif $d \leq d_{max}$ \xthen
+           \comment{need to recurse more to sufficiently reduce \#vertices with $PhD$ status}
+
+ \item \T $m_d \gets \ceil{m \cdot \alpha ^ d }$
+           \comment{size of edge sample which geometrically decreases with $d$}
+
+ \item \T $\widehat{E} \gets$ a sample of size $m_d$ chosen uniformly at random from $E$
+           \comment{do not always touch all edges in $E$}
+
+ \item \T \xparallel \xfor each $v \in V$ \xdo $U[ v ] \gets \func{False}$
+           \comment{flag $U[ v ]$ keeps track if an edge in $\widehat{E}$ hits $v$}
+
+ \item \T \xparallel \xfor each $(u, v) \in \widehat{E}$ \xdo 
+           \comment{check each edge in the sample}
+
+ \item \T\T $u' \gets L[ u ]$,~ $v' \gets L[ v ]$
+           \comment{find the root of the tree containing each endpoint}
+
+ \item \T\T \xif $u' \in V$ \xand $v' \in V$ \xand $u' \neq v'$ \xand $PhD[ u' ] = PhD[ v' ] = \func{True}$ \xthen 
+           \comment{if $(u', v')$ is live and heavy}
+
+ \item \T\T\T $N[ u' ] \gets v'$,~ $N[ v' ] \gets u'$
+           \comment{try to associate the edge with $u'$ and $v'$}
+
+ \item \T\T\T $U[ u' ] \gets \func{True}$,~ $U[ v' ] \gets \func{True}$
+           \comment{$\widehat{E}$ hits $u'$ and $v'$}
+
+ \item \T \xparallel \xfor each $v \in V$ \xdo
+              \comment{check each vertex $v$ in $V$}
+
+ \item \T\T \xif $U[ v ] = \func{false}$ \xthen $PhD[ v ] \gets \func{False}$
+              \comment{if $\widehat{E}$ does not hit $v$ then $v$ loses its $PhD$ status}
+
+ \item \T $\widehat{V} \gets \left\{~v~|~v \in V~ \wedge ~U[ v ] = \func{True} ~\right\}$
+              \comment{$\widehat{V}$ contains the vertices from $V$ which still have $PhD$ status}
+
+ \item \T \func{Random-Hook}$(~\widehat{V}, ~L, ~N ~)$
+              \comment{hook among vertices in $\widehat{V}$ (see Figure \ref{fi:pcc})}
+
+ \item \T $V' \gets \left\{~v~|~v \in V~ \wedge ~v = L[v] ~\right\}$
+              \comment{$V'$ contains only the roots after hooking}
+
+ \item \T \func{Par-Randomized-CC-3}$(~V', ~E, ~L, ~PhD, ~N, ~U, ~d+1 ~)$
+              \comment{recurse on the smaller instance}
+
+ \item \T \xparallel \xfor each $v \in V$ \xdo $L[ v ] \gets L[ L[ v ] ]$
+              \comment{map the solution back to the current instance}
+
+ \item \xendif 
+
+ \item \xif $d = 0$ \xthen
+         \comment{done compressing}
+
+ \item \T $V' \gets \left\{~v~|~v \in V~ \wedge ~v = L[v] ~\right\}$
+            \comment{collect only the root vertices}
+
+ \item \T $E' \gets \left\{~( L[ u ], L[ v ] )~|~(u, v) \in E~ \wedge ~L[ u ] \neq L[ v ] ~\right\}$
+           \lcomment{$E'$ contains only edges among roots,}
+
+           \rcomment{and no duplicate edges and self loops}
+
+ \item \T \func{Par-Randomized-CC-2}$(~V', ~E', ~L ~)$
+           \lcomment{use the algorithm from Figure \ref{fi:pcc} to solve the problem once the}
+
+           \rcomment{number of edges reduces to a sufficiently small number}
+
+ \item \T \xparallel \xfor each $v \in V$ \xdo $L[ v ] \gets L[ L[ v ] ]$
+              \comment{map the solution back to the current instance}
+
+ \item \xendif 
+
+ \vspace{0.2cm}
+
+ \end{enumerate}
+
+ }
+ \end{minipage}
+ \vspace{0.1cm}
+ }
+
+
+ \vspace{-0.2cm}
+ \caption{Parallel connected components (CC) based on edge sampling.}
+ \label{fi:pcc-sampling}
+ \vspace{-0.3cm}
+ \end{center}
+ \end{minipage}
+ \end{figure*}
+
+
+
+\newpage
+
+
+\vspace{2cm}
+
+\section*{APPENDIX 1: Input/Output Format for Task 2}
+
+ Your code must read from standard input and write to standard output.
+%
+ \begin{itemize}
+%
+\vspace{-0.1cm}
+ \item[--] {\bf Input Format:} The first line of the input will contain two integers giving the number of vertices ($n$)
+ and the number of edges ($m$), respectively. Each of the next $m$ lines will contain two integers $u$ and $v$ ($1 \leq u, v \leq n$)
+denoting an undirected edge between vertices $u$ and $v$. The edges will be sorted in nondecreasing order of the first vertex.
+%
+\vspace{-0.1cm}
+ \item[--] {\bf Output Format:} The first line of the output will contain an integer $r$
+giving the number of connected components in the input graph. This will be followed
+by the size of each of the $r$ connected components, each on a separate line, ordered from the
+largest to the smallest. The size
+of a connected component is an integer giving the number of vertices in that component.
+%
+\vspace{-0.1cm}
+ \item[--] {\bf Sample Input/Output:} {\tt /work/01905/rezaul/CSE638/HW2/samples} on Lonestar.
+%
+\vspace{-0.1cm}
+ \item[--] {\bf Test Input/Output (see Table \ref{test-input}):} {\tt /work/01905/rezaul/CSE638/HW2/turn-in} on Lonestar.
+%
+ \end{itemize}
+
+\begin{table}[ht!]
+\vspace{-8pt}
+%\begin{tabular}{|p{1.1cm}|p{2.5cm}|p{.9cm}|p{.9cm}|p{.8cm}|} % centered columns (4 columns)
+\begin{center}
+\begin{tabular}{|l|l|r|r|} % centered columns (4 columns)
+\hline                        %inserts double horizontal lines
+%
+\scriptsize Graph
+ & \scriptsize Description
+ &\scriptsize $n$ &\scriptsize $m$
+% &\scriptsize D
+\\ % inserts table
+\hline                  % inserts single horizontal line
+\scriptsize as-skitter  & \scriptsize Internet topology graph, from traceroutes run daily in 2005  & \scriptsize 1.7M& \scriptsize 11M\\
+% & \scriptsize 53 \\ % inserting body of the table
+\scriptsize ca-AstroPh &\scriptsize Collaboration network of Arxiv Astro Physics &\scriptsize 18.7K& \scriptsize 396K\\
+% & \scriptsize 42 \\
+\scriptsize com-amazon&\scriptsize Amazon product network &\scriptsize 334K	& \scriptsize 925K\\
+% & \scriptsize 141 \\
+\scriptsize com-dblp &\scriptsize DBLP collaboration network &\scriptsize 317K	
+	& \scriptsize 1M\\
+% & \scriptsize 14 \\     % [1ex] adds vertical space
+\scriptsize com-friendster &\scriptsize Friendster online social network
+ &\scriptsize 65M	
+	& \scriptsize 1.8B\\
+% & \scriptsize 11 \\     % [1ex] adds vertical space
+\scriptsize com-lj &\scriptsize LiveJournal online social network &\scriptsize 4M	
+	& \scriptsize 34M\\
+% & \scriptsize 12 \\     % [1ex] adds vertical space
+\scriptsize com-orkut &\scriptsize Orkut online social network &\scriptsize 3M	& \scriptsize 117M\\
+% & \scriptsize 5 \\     % [1ex] adds vertical space
+\scriptsize roadNet-CA &\scriptsize Road network of California &\scriptsize 2M	& \scriptsize 2.7M\\
+% & \scriptsize 5 \\     % [1ex] adds vertical space
+\scriptsize roadNet-PA &\scriptsize Road network of Pennsylvania &\scriptsize 1M	& \scriptsize 1.5M\\
+% & \scriptsize 5 \\     % [1ex] adds vertical space
+\scriptsize roadNet-TX &\scriptsize Road network of Texas &\scriptsize 1.4M	& \scriptsize 1.9M\\
+% & \scriptsize 5 \\     % [1ex] adds vertical space
+\hline %inserts single line
+\end{tabular}
+\caption{Input graphs with \#vertices ($n$) and \#edges ($m$). 
+% Note that $1K = 10^3$, $1M = 10^6$ and $1B = 10^9$.
+%The diameters in the table show the maximum diameter explored by the BFS rather than the actual diameter of these graphs.
+}
+\vspace{-8pt}
+%\end{minipage}
+\label{test-input} % is used to refer this table in the text%\vspace{-5pt}
+\end{center}
+\end{table}
+
+
+\newpage
+\section*{APPENDIX 2: What to Turn in}
+
+ One compressed archive file (e.g., zip, tar.gz) containing the following items.
+%
+ \begin{itemize}
+%
+\vspace{-0.1cm}
+ \item[--] Source code, makefiles and job scripts.
+%
+\vspace{-0.1cm}
+ \item[--] A PDF document containing all answers and plots.
+%
+\vspace{-0.1cm}
+ \item[--] Output generated for the input files in {\tt /work/01905/rezaul/CSE638/HW2/turn-in/} on Lonestar.
+           If the name of the input file is {\tt xxxxx-in.txt} in task $2(j)$, please name the output files as {\tt xxxxx-2j-CC-1-out.txt},
+           {\tt xxxxx-2j-CC-2-out.txt} and {\tt xxxxx-2j-CC-3-out.txt} for \func{Par-Randomized-CC},
+           \func{Par-Randomized-CC-2} and \func{Par-Randomized-CC-3}, respectively. 
+%
+ \item[--] Output files generated by Cilkview.
+%
+ \end{itemize}
+
+
+\section*{APPENDIX 3: Things to Remember}
+%
+ \begin{itemize}
+%
+\vspace{-0.1cm}
+ \item[--] {\bf Please never run anything that takes more than a minute or uses multiple cores on TACC login nodes.}
+          TACC policy strictly prohibits such usage. They reserve the right to suspend your account if you
+          do so. All runs must be submitted as jobs to compute nodes (even when you use Cilkview or PAPI).
+%
+\vspace{-0.1cm}
+ \item[--] Please store all data in your work folder (\$WORK), and not in your home folder (\$HOME).
+%
+\vspace{-0.1cm}
+ \item[--] When measuring running times please exclude the time needed for reading the input and writing
+          the output. Measure only the time needed by the algorithm. Do the same thing when you
+          run Cilkview.
+%
+\vspace{-0.1cm}
+ \item[--] Please make sure that speedup values for trial runs (or measured speedups) are
+           included in the Cilkview plots you generate.
+%
+ \end{itemize}
+
+
+\end{document}
+
+
+
