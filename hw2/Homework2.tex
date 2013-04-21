@@ -1,0 +1,283 @@
+\documentclass[11pt]{article}
+
+\usepackage{epsfig}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{theorem}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{wrapfig}
+
+%\usepackage{layout}% if you want to see the layout parameters
+                     % and now use \layout command in the body
+
+% This is the stuff for normal spacing
+\makeatletter
+ \setlength{\textwidth}{6.5in}
+ \setlength{\oddsidemargin}{0in}
+ \setlength{\evensidemargin}{0in}
+ \setlength{\topmargin}{0.25in}
+ \setlength{\textheight}{8.25in}
+ \setlength{\headheight}{0pt}
+ \setlength{\headsep}{0pt}
+ \setlength{\marginparwidth}{59pt}
+
+ \setlength{\parindent}{0pt}
+ \setlength{\parskip}{5pt plus 1pt}
+ \setlength{\theorempreskipamount}{5pt plus 1pt}
+ \setlength{\theorempostskipamount}{0pt}
+ \setlength{\abovedisplayskip}{8pt plus 3pt minus 6pt}
+
+ \renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                   {2ex plus -1ex minus -.2ex}%
+                                   {1.3ex plus .2ex}%
+                                   {\normalfont\Large\bfseries}}%
+ \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\large\bfseries}}%
+ \renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+ \renewcommand{\paragraph}{\@startsection{paragraph}{4}{0mm}%
+                                    {1ex \@plus1ex \@minus.2ex}%
+                                    {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+ \renewcommand{\subparagraph}{\@startsection{subparagraph}{5}{\parindent}%
+                                       {2.0ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                      {\normalfont\normalsize\bfseries}}
+\makeatother
+
+\newenvironment{proof}{{\bf Proof:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofof}[1]{{\bf Proof of #1:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofofnobox}[1]{{\bf#1:  }}{}
+\newenvironment{example}{{\bf Example:  }}{\hfill\rule{2mm}{2mm}}
+\renewcommand{\thesection}{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\alph{subsection}}
+
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+
+\newtheorem{fact}{Fact}[section]
+\newtheorem{lemma}[fact]{Lemma}
+\newtheorem{theorem}[fact]{Theorem}
+\newtheorem{definition}[fact]{Definition}
+\newtheorem{corollary}[fact]{Corollary}
+\newtheorem{proposition}[fact]{Proposition}
+\newtheorem{claim}[fact]{Claim}
+\newtheorem{exercise}[fact]{Exercise}
+
+% math notations
+\newcommand{\R}{\ensuremath{\mathbb R}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\F}{\ensuremath{\mathcal F}}
+\newcommand{\SymGrp}{\ensuremath{\mathfrak S}}
+
+\newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor#1\right\rfloor}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\polylog}{\operatorname{polylog}}
+
+% asymptotic notations
+\newcommand{\Oh}[1]{{\mathcal O}\left({#1}\right)}
+\newcommand{\LOh}[1]{{\mathcal O}\left({#1}\right.}
+\newcommand{\ROh}[1]{{\mathcal O}\left.{#1}\right)}
+\newcommand{\oh}[1]{{o}\left({#1}\right)}
+\newcommand{\Om}[1]{{\Omega}\left({#1}\right)}
+\newcommand{\om}[1]{{\omega}\left({#1}\right)}
+\newcommand{\Th}[1]{{\Theta}\left({#1}\right)}
+
+
+% pseudocode notations
+\newcommand{\xif}{{\bf{\em{if~}}}}
+\newcommand{\xthen}{{\bf{\em{then~}}}}
+\newcommand{\xelse}{{\bf{\em{else~}}}}
+\newcommand{\xelseif}{{\bf{\em{elif~}}}}
+\newcommand{\xfi}{{\bf{\em{fi~}}}}
+\newcommand{\xcase}{{\bf{\em{case~}}}}
+\newcommand{\xendcase}{{\bf{\em{endcase~}}}}
+\newcommand{\xfor}{{\bf{\em{for~}}}}
+\newcommand{\xto}{{\bf{\em{to~}}}}
+\newcommand{\xby}{{\bf{\em{by~}}}}
+\newcommand{\xdownto}{{\bf{\em{downto~}}}}
+\newcommand{\xdo}{{\bf{\em{do~}}}}
+\newcommand{\xrof}{{\bf{\em{rof~}}}}
+\newcommand{\xwhile}{{\bf{\em{while~}}}}
+\newcommand{\xendwhile}{{\bf{\em{endwhile~}}}}
+\newcommand{\xand}{{\bf{\em{and~}}}}
+\newcommand{\xor}{{\bf{\em{or~}}}}
+\newcommand{\xerror}{{\bf{\em{error~}}}}
+\newcommand{\xreturn}{{\bf{\em{return~}}}}
+\newcommand{\xparallel}{{\bf{\em{parallel~}}}}
+\newcommand{\T}{\hspace{0.5cm}}
+\newcommand{\m}{\mathcal}
+
+\def\sland{~\land~}
+\def\slor{~\lor~}
+\def\sRightarrow{~\Rightarrow~}
+
+\def\comment#1{\hfill{$\left\{\textrm{{\em{#1}}}\right\}$}}
+\def\lcomment#1{\hfill{$\left\{\textrm{{\em{#1}}}\right.$}}
+\def\rcomment#1{\hfill{$\left.\textrm{{\em{#1}}}\right\}$}}
+\def\fcomment#1{\hfill{$\textrm{{\em{#1}}}$}}
+\def\func#1{\textrm{\bf{\sc{#1}}}}
+\def\funcbf#1{\textrm{\textbf{\textsc{#1}}}}
+
+\newcommand{\hide}[1]{}
+
+\newcommand{\prob}[1]{\ensuremath{\text{{\bf Pr}$\left[#1\right]$}}}
+\newcommand{\expct}[1]{\ensuremath{\text{{\bf E}$\left[#1\right]$}}}
+\newcommand{\Event}{{\mathcal E}}
+
+\newcommand{\mnote}[1]{\normalmarginpar \marginpar{\tiny #1}}
+
+\makeatletter
+   \newcommand\figcaption{\def\@captype{figure}\caption}
+   \newcommand\tabcaption{\def\@captype{table}\caption}
+\makeatother
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document begins here %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\headings}[3]{
+{\bf CSE638 \& AMS641: Advanced Algorithms} \hfill {{\bf Lecturer:} #1}\\
+{{\bf Submitted by:} #2} \hfill {{\bf Date:} #3} \\
+\\
+\rule[0.1in]{\textwidth}{0.025in}
+%\thispagestyle{empty}
+}
+
+\begin{document}
+
+\headings{Prof. Rezaul A. Chowdhury}{Yoni Fogel, Arun Rathakrishnan and Amitav Paul}{April 20, 2013}
+\newcommand{\lecnum}{1}  % Lecture Number
+
+{\centerline {\Huge Homework \# 2}}
+\section{Parallel BFS with Cilk's Work Stealing.}
+     
+\subsection{}
+We replace the {\bf for} loop over an input queue with a manually implemented {\bf parallel for}  (divide-and-conquer) and used the worker's id to choose the output queue.
+
+\subsection{}
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & $RT_{SBFS}$ & $RT_{PBFS^{(f)}}$ & $RT_{PBFS^{(g)}}$ & $SF_{PBFS^{(f)}}$ & $SF_{PBFS^{(g)}}$ & $T_{HW2}$\\ \hline
+    cage14 & 1786 & 313 & 315.18 & 5.70 & 5.67 & 55.65\\ \hline
+    cage15 & 1231 & 303.904 & 303.75 & 4.05 & 4.05 & 212.18\\ \hline
+    freescale & 1835 & 223 & 253.00 & 8.22 & 7.25 & 218.56\\ \hline
+	Wikipedia & 709 & 705.47 & 703 & 1.00 & 1.00 & 139.19\\ \hline
+    kkt-power & 410 & 21.5 & 20.79 & 19.07 & 19.72 & 10.06\\ \hline
+    RMAT100M & 3253 & 673.57 & 647.00 & 4.83 & 5.03 & 501.59\\ \hline
+    RMAT1B & - & 2544.57 & - & - & - & 2400\\ \hline
+        
+    \end{tabular}
+    \caption {RT = Running Time, SBFS = Serial BFS, $PBFS^{(f)}$ = Parallel BFS for task 1(f), $PBFS^{(g)}$ = Parallel BFS for task 1(g) and HW2 = Homework 2. Times are in seconds.}
+\end{center}
+\end {table}
+
+\section{Parallel Connected Components.}
+\subsection{}
+For an arbitrary graph that satisfies the required property let us assume for the sake of contradiction, the largest possible $Q$ is such that $|Q| < \frac{|V|}{2}$. $G' = (V, Q')$ is cycle free. Adding more edges will lead to the formation of a cycle in $G'$.\\
+\\
+Consider all the potential edges that can be added to graph $E' = \left\{ \left( v, N[ v ] \right), v \in V \right\}$. $ |E'| = |V|$, since each vertex $u$, has a unique $N[u]$.
+Clearly  $|Q| < \frac{|E'|}{2}$.\\
+\\
+If there are k edges in a graph, at most $2 \times k$ vertices can have an edge incident on them. So $G'$ has less than $|V|$ vertices that have an edge incident on them. There is atleast one non-isloated vertex v, that has no edge incident on it in $G'$.\\
+\\
+ The partition $V \setminus \left\{v \right\}, \left\{v \right\}$ in $G'$ form two cycle free components. Adding an edge between them does not create a cycle. Thus $\left( v, N[ v ] \right) $ can be added to $Q$ without creating a cycle. This contradicts our assumption that a maximal subset of edges $Q$, can have $|Q| < \frac{|V|}{2}$. Thus, $|Q| \geq \frac{|V|}{2}$.
+ 
+
+\subsection{}
+{\bf Answer:}
+
+\subsection{}
+\func{Par-Randomized-CC} can hook vertices to a root vertex such that it forms a star of depth at most $1$.
+ Also the expected number of edges thus hooked in a round is exactly $\frac{|E|}{2}$.\\
+In \func{Random-Hook} during the second hooking phase, a vertex $u$ hooked to root $v$
+ can in turn add a new vertex to the star. Thus the depth of a start can be at most $2$. 
+Also the number of vertices hooked in a round is at least $\frac{|V|}{4}$.
+
+\subsection{}
+Let $X$ be the indicator random variable that represents whether $L$ value of a vertex changes.
+For $L$ value of a vertex to change, during the first phase of hooking, $C [v] = \func{HEAD}$ and  $C[ N[v] ] = \func{HEAD}$.\\
+ The $L$ value can change also during the second phase of hooking after flipping vertices that are not hooked.\\
+So the probability that $L$ value of a vertex changes is at least equal to the probaility that $L$ value changes during the first phase of hooking which is $\frac{1}{4}$.
+\\
+Thus expected number vertices for which $L$ value changes, $\mu = E[X] = |V| \times \frac{1}{4}$. $ \delta = {3 \over 4}$.
+\\
+Applying, Chernoff Bound's lower tail:
+\[
+P \left[ X < \frac{|V|}{16} \right] < e^{\frac { \frac{|V|}{4} \times {\frac{3}{4}}^2} {2}} = e^{|V| / 32}
+\]
+
+Thus,
+$P \left[ X \geq \frac{|V|}{16} \right] \geq 1 - {1 \over {e^{|V| / 32}}}$.
+
+\subsection{}
+{\bf Answer:}
+
+\subsection{}
+Some vertex will retain their PHD status, if they did not changed their $L[.]$ value in the \func{Random-Hook}. So, using {\bf task 2.d}, probability that the vertices failed to change their $L[.]$ values,\\
+$p_{fail_{d}} \leq \displaystyle\sum\limits_{i=0}^d {1 \over {e^{n_i/ 32}}} \leq d \cdot {1 \over {e^{n_d/ 32}}} \leq {d_{max} \over {e^{n_{d_{max}}/ 32}}} = {\frac{1}{4} \log_{1 \over \alpha} n \over {e^{\alpha^{2d_{max}}n/ 32}}} = {\frac{1}{4} \log_{1 \over \alpha} n \over {e^{\alpha^{\frac{1}{4} \log_{1 \over \alpha}n}n/ 32}}} = {\frac{1}{4} \log_{1 \over \alpha} n \over {e^{n^{-\frac{1}{2}}n/ 32}}} = {\log_{1 \over \alpha} n \over {4e^{n^{1 \over 2}/32}}} = o(n^{1 \over c})$ for some constant $c$\\\\
+
+So, for each
+ $d \in [0, d_{max}]$, $n_d \leq {\alpha}^{2d} \cdot n$ w.h.p. in $n$.  
+
+\subsection{}
+The question is wrong. Consider the complete graph as an input. At the beginning all edges and vertices are heavy. The first time you run random hook, the expected number of vertices that lose PhD status is at least $\frac{1}{4} n$. And so in the next level at least  $\frac{1}{4} n (n-1) \not \leq \alpha^d n$ heavy edges become light.
+ \\
+
+\subsection{}
+Because of \func{Random-Hook},\\
+Expected $n_d \leq (\frac{3}{4})^dn \leq \alpha^{2d}n$\\
+Expected $n_{d_{max}} = O(n^{0.5})$\\
+Therefore, expected number of edges $= O(n)$.
+
+\subsection{}
+Let $n = |V|$ and $m = |E|$. \func{Par-Randomized-CC-3} is called $O(\log n)$ time. $n_d$ and $m_d$ are geometrically decreasing.\\
+Expected $T_1 = O(n+m)$,\\
+$T_p = n/p + m/p + \log p \log n)$. 
+At the end, \func{Par-Randomized-CC-2} does not affect the asymptotic running time.
+
+\subsection{}
+The timing info is provided in the \textbackslash output\textbackslash timing\textunderscore info.txt
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c |}
+    \hline
+    Input File & \func{PR-CC-1} & \func{PR-CC-2} & \func{PR-CC-3}\\ \hline
+    as-skitter-2j-CC-1-out.txt & 28.359662 & 17.177 & 41.24\\ \hline
+com-amazon-2j-CC-1-out.txt & 2.891122 & 1.591265 & 3.17\\ \hline
+com-dblp-2j-CC-1-out.txt & 3.281750 & 1.7401 & 3.64\\ \hline
+com-lj-2j-CC-1-out.txt & 93.301557 & 68.3 & 136.84\\ \hline
+com-orkut-pcc2.txt & 254.32 & 231.422784 & 451.85\\ \hline
+parallel\textunderscore com-ca-2j-CC-1-out.txt & 0.646374 &  0.655 & 1.247\\ \hline 
+roadNet-CA-2j-CC-1.txt & 13.854537 & 5.323 & 15.99\\ \hline
+roadNet-PA-2j-CC-1.txt & 5.665667 & 2.84 & 8.46\\ \hline
+roadNet-TX-2j-CC-1.txt & 8.973965 & 3.57 & 10.525\\ \hline
+      
+    \end{tabular}
+    \caption {PR = Par-Randomized. Times are in seconds.}
+\end{center}
+\end {table}
+
+
+
+\subsection{}
+{\bf Answer:}
+
+\end{document}
