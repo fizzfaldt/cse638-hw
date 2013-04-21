@@ -1,0 +1,29 @@
+==> as-skitter-pcc2.txt <==
+Time taken: 17.177322
+
+==> com-amazon-pcc2.txt <==
+Time taken: 1.591265
+
+==> com-dblp-pcc2.txt <==
+Time taken: 1.740110
+
+==> com-lj-pcc2.txt <==
+Time taken: 68.389080
+
+==> com-orkut-pcc2.txt <==
+Time taken: 231.422784
+
+==> parallel_com-ca-pcc2.txt <==
+Time taken: 0.655993
+
+==> parallel_com-youtube-out-pcc2.txt <==
+2
+
+==> roadNet-CA-pcc2.txt <==
+Time taken: 5.323779
+
+==> roadNet-PA-pcc2.txt <==
+Time taken: 2.841188
+
+==> roadNet-TX-pcc2.txt <==
+Time taken: 3.572870
