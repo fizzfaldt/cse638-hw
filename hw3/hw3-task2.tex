@@ -138,6 +138,7 @@
 \def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
 \def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
 \def\func#1{\textrm{\bf{\sc{#1}}}}
+\def\mfunc#1{\mbox{\func{#1}}}
 \def\funcbf#1{\textrm{\textbf{\textsc{#1}}}}
 
 \newcommand{\hide}[1]{}
@@ -224,6 +225,12 @@
         where $M$ is the size of the cache and $B$ is the block transfer size.  Explain why the algorithm from part 2(b)
         cannot be converted in the same way to achieve the same asymptotic cache-complexity.
 
+        \bigskip
+        {\bf \em TODO (what is here is just notes)}
+
+    \item Find some invariants and modify algorithm from part 2(c) to run in $\Oh{n^2}$ time and use $\Oh{n^2}$ space.
+        See \func{Optimal-Score-E}
+
 \end{enumerate}
 
 %%%%%%%%%%%% Begin A
@@ -246,7 +253,7 @@
                             \item \xfor $i \gets n$ \xdownto $1$ \xdo
                             \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
                             \item \T \T \xif $j \geq n-1$ \xthen
-                                \rcomment{\func{Score} is undefined without this change.  Original: \xif $j = n$.}
+                                \comment{\func{Score} is undefined without this change.  Original: \xif $j = n$.}
                             \item \T \T \T \func{Score}$(~i,~j~) \gets 0$
                             \item \T \T \xelse
                             \item \T \T \T $best \gets 0$
@@ -256,7 +263,7 @@
                             \item \T \T \T \func{Score}$(~i,~j~) \gets best$
                             \item $answer \gets 0$
                             \item \xfor $j \gets 1$ \xto $n$ \xdo
-                            \item \T $answer \gets \max{(~answer, ~\mbox{\func{Score}}(~1, ~j~))}$
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
                             \item \xreturn $answer$
                         \end{enumerate}
 
@@ -327,7 +334,7 @@
                             \item \T \T \T \func{Score}$(i,j) \gets best$
                             \item $answer \gets 0$
                             \item \xfor $j \gets 1$ \xto $n$ \xdo
-                            \item \T $answer \gets \max{(~answer, ~\mbox{\func{Score}}(~1, ~j~))}$
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
                             \item \xreturn $answer$
                         \end{enumerate}
 
@@ -404,7 +411,7 @@
                             \item \T \T \T \func{Score}$(i,j) \gets best$
                             \item $answer \gets 0$
                             \item \xfor $j \gets 1$ \xto $n$ \xdo
-                            \item \T $answer \gets \max{(~answer, ~\mbox{\func{Score}}(~1, ~j~))}$
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
                             \item \xreturn $answer$
                         \end{enumerate}
 
@@ -440,6 +447,59 @@
 
 
 
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+
+        \end{center}
+    \end{minipage}
+\end{figure*}
+
+%%%%%%%%%%%% Begin E
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+    \begin{minipage}{\textwidth}
+        \begin{center}
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Optimal-Score-E}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $\mfunc{Initialized}(~j~) \gets \mfunc{False}$
+                            \item \T \xfor $k \gets 1$ \xto $n$ \xdo
+                            \item \T \T \mfunc{Best-Score}$(~j, ~k~) \gets 0$
+                                \comment{\mfunc{Best-Score}$(~j, ~k~) = \max_{k \leq \ell \leq n}(\mfunc{Score}(~j,~\ell~)$}
+                            \item \T \T \mfunc{Score}$(~j, ~k~) \gets 0$
+                            \item \mfunc{Score-One-Fold-C} $\gets$ \mfunc{Preprocess-Score-One-Fold-C}$(~P~)$
+                            \item \xfor $i \gets n$ \xdownto $1$ \xdo
+                            \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
+                            \item \T \T \xif $j < n-1$ \xthen
+                            \item \T \T \T \xif $\lnot \mfunc{Initialized}(~j~)$ \xthen
+                            \item \T \T \T \T $\mfunc{Initialized}(~j~) \gets \mfunc{True}$
+                            \item \T \T \T \T $\mfunc{Best-Score}(~j+1, ~n~) \gets \mfunc{Score}(~j+1, ~n~)$
+                            \item \T \T \T \T \xfor $k \gets n-1$ \xdownto $j+1$ \xdo
+                            \item \T \T \T \T \T $\mfunc{Best-Score}(~j+1, ~k ~) \gets \max{(~\mfunc{Best-Score}(~j+1,~k+1~),~\mfunc{Score}(~j+1,~k~)~)}$
+                            \item \T \T \T $k \gets 2j-i+1$
+                                \comment{$j-i = k-j-1$}
+                            \item \T \T \T $\ell \gets j-i$
+                            \item \T \T \T $C_1 \gets \mfunc{Score}(~i+1,~j~)$
+                            \item \T \T \T $C_2 \gets \mfunc{Best-Score}(~j+1,~k~) + \mfunc{Score-One-Fold-C}(~j,~\ell~)$
+                            \item \T \T \T $\mfunc{Score}(~i,~j~) \gets \max{(~C_1,~C_2~)}$
+                            \item $answer \gets 0$
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
+                            \item \xreturn $answer$
+                        \end{enumerate}
+
+                    }
                 \end{minipage}
                 \vspace{0.1cm}
             }
