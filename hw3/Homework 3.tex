@@ -1,0 +1,609 @@
+\documentclass[11pt]{article}
+
+\usepackage{epsfig}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{amstext}
+\usepackage{amsmath}
+\usepackage{xspace}
+\usepackage{theorem}
+\usepackage{color}
+\usepackage{times}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{enumerate}
+\usepackage{float}
+\usepackage{wrapfig}
+
+
+%\usepackage{layout}% if you want to see the layout parameters
+                     % and now use \layout command in the body
+
+% This is the stuff for normal spacing
+\makeatletter
+ \setlength{\textwidth}{6.5in}
+ \setlength{\oddsidemargin}{0in}
+ \setlength{\evensidemargin}{0in}
+ \setlength{\topmargin}{0.25in}
+ \setlength{\textheight}{8.25in}
+ \setlength{\headheight}{0pt}
+ \setlength{\headsep}{0pt}
+ \setlength{\marginparwidth}{59pt}
+
+ \setlength{\parindent}{0pt}
+ \setlength{\parskip}{5pt plus 1pt}
+ \setlength{\theorempreskipamount}{5pt plus 1pt}
+ \setlength{\theorempostskipamount}{0pt}
+ \setlength{\abovedisplayskip}{8pt plus 3pt minus 6pt}
+
+ \renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                   {2ex plus -1ex minus -.2ex}%
+                                   {1.3ex plus .2ex}%
+                                   {\normalfont\Large\bfseries}}%
+ \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\large\bfseries}}%
+ \renewcommand{\thesubsection}{(\alph{subsection})}                                    
+ \renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{0mm}%
+                                     {1ex plus -1ex minus -.2ex}%
+                                     {1ex plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+ \renewcommand{\paragraph}{\@startsection{paragraph}{4}{0mm}%
+                                    {1ex \@plus1ex \@minus.2ex}%
+                                    {-1em}%
+                                    {\normalfont\normalsize\bfseries}}
+ \renewcommand{\subparagraph}{\@startsection{subparagraph}{5}{\parindent}%
+                                       {2.0ex \@plus1ex \@minus .2ex}%
+                                       {-1em}%
+                                      {\normalfont\normalsize\bfseries}}
+\makeatother
+%\renewcommand{\theenumi}{\Alph{enumi}}
+
+\newenvironment{proof}{{\bf Proof:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofof}[1]{{\bf Proof of #1:  }}{\hfill\rule{2mm}{2mm}}
+\newenvironment{proofofnobox}[1]{{\bf#1:  }}{}
+\newenvironment{example}{{\bf Example:  }}{\hfill\rule{2mm}{2mm}}
+%\renewcommand{\thesection}{\lecnum.\arabic{section}}
+
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+%\renewcommand{\thefigure}{\thesection.\arabic{figure}}
+\renewcommand{\thefigure}{\arabic{figure}}
+
+\newtheorem{fact}{Fact}[section]
+\newtheorem{lemma}[fact]{Lemma}
+\newtheorem{theorem}[fact]{Theorem}
+\newtheorem{definition}[fact]{Definition}
+\newtheorem{corollary}[fact]{Corollary}
+\newtheorem{proposition}[fact]{Proposition}
+\newtheorem{claim}[fact]{Claim}
+\newtheorem{exercise}[fact]{Exercise}
+
+% math notations
+\newcommand{\R}{\ensuremath{\mathbb R}}
+\newcommand{\Z}{\ensuremath{\mathbb Z}}
+\newcommand{\N}{\ensuremath{\mathbb N}}
+\newcommand{\F}{\ensuremath{\mathcal F}}
+\newcommand{\SymGrp}{\ensuremath{\mathfrak S}}
+
+\newcommand{\size}[1]{\ensuremath{\left|#1\right|}}
+\newcommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\floor}[1]{\ensuremath{\left\lfloor#1\right\rfloor}}
+\newcommand{\poly}{\operatorname{poly}}
+\newcommand{\polylog}{\operatorname{polylog}}
+
+% asymptotic notations
+\newcommand{\Oh}[1]{\ensuremath{{\mathcal O}\left({#1}\right)}}
+\newcommand{\LOh}[1]{\ensuremath{{\mathcal O}\left({#1}\right.}}
+\newcommand{\ROh}[1]{\ensuremath{{\mathcal O}\left.{#1}\right)}}
+\newcommand{\oh}[1]{\ensuremath{{o}\left({#1}\right)}}
+\newcommand{\Om}[1]{\ensuremath{{\Omega}\left({#1}\right)}}
+\newcommand{\om}[1]{\ensuremath{{\omega}\left({#1}\right)}}
+\newcommand{\Th}[1]{\ensuremath{{\Theta}\left({#1}\right)}}
+
+
+% pseudocode notations
+\newcommand{\xif}{{\bf{\em{if~}}}}
+\newcommand{\xthen}{{\bf{\em{then~}}}}
+\newcommand{\xelse}{{\bf{\em{else~}}}}
+\newcommand{\xelseif}{{\bf{\em{elif~}}}}
+\newcommand{\xfi}{{\bf{\em{fi~}}}}
+\newcommand{\xendif}{{\bf{\em{endif~}}}}
+\newcommand{\xcase}{{\bf{\em{case~}}}}
+\newcommand{\xendcase}{{\bf{\em{endcase~}}}}
+\newcommand{\xbreak}{{\bf{\em{break~}}}}
+\newcommand{\xfor}{{\bf{\em{for~}}}}
+\newcommand{\xto}{{\bf{\em{to~}}}}
+\newcommand{\xby}{{\bf{\em{by~}}}}
+\newcommand{\xdownto}{{\bf{\em{downto~}}}}
+\newcommand{\xdo}{{\bf{\em{do~}}}}
+\newcommand{\xrof}{{\bf{\em{rof~}}}}
+\newcommand{\xwhile}{{\bf{\em{while~}}}}
+\newcommand{\xendwhile}{{\bf{\em{endwhile~}}}}
+\newcommand{\xand}{{\bf{\em{and~}}}}
+\newcommand{\xor}{{\bf{\em{or~}}}}
+\newcommand{\xerror}{{\bf{\em{error~}}}}
+\newcommand{\xreturn}{{\bf{\em{return~}}}}
+\newcommand{\xparallel}{{\bf{\em{parallel~}}}}
+\newcommand{\xspawn}{{\bf{\em{spawn~}}}}
+\newcommand{\xsync}{{\bf{\em{sync~}}}}
+\newcommand{\xarray}{{\bf{\em{array~}}}}
+\newcommand{\T}{\hspace{0.5cm}}
+\newcommand{\m}{\mathcal}
+
+\def\sland{~\land~}
+\def\slor{~\lor~}
+\def\sRightarrow{~\Rightarrow~}
+
+\definecolor{gray}{rgb}{0.3,0.3,0.3}
+
+\def\comment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right\}$}}}
+\def\lcomment#1{\hfill{\color{gray}{$\left\{\textrm{{\em{#1}}}\right.$}}}
+\def\rcomment#1{\hfill{\color{gray}{$\left.\textrm{{\em{#1}}}\right\}$}}}
+\def\fcomment#1{\hfill{\color{gray}{$\textrm{{\em{#1}}}$}}}
+\def\func#1{\textrm{\bf{\sc{#1}}}}
+\def\mfunc#1{\mbox{\func{#1}}}
+\def\funcbf#1{\textrm{\textbf{\textsc{#1}}}}
+
+\newcommand{\hide}[1]{}
+
+\newcommand{\prob}[1]{\ensuremath{\text{{\bf Pr}$\left[#1\right]$}}}
+\newcommand{\expct}[1]{\ensuremath{\text{{\bf E}$\left[#1\right]$}}}
+\newcommand{\Event}{{\mathcal E}}
+
+\newcommand{\mnote}[1]{\normalmarginpar \marginpar{\tiny #1}}
+
+\makeatletter
+   \newcommand\figcaption{\def\@captype{figure}\caption}
+   \newcommand\tabcaption{\def\@captype{table}\caption}
+\makeatother
+
+ \def\para#1{\vspace{0.2cm}\noindent{\bf{#1.}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document begins here %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\headings}[3]{
+{\bf CSE638 \& AMS641: Advanced Algorithms} \hfill {{\bf Lecturer:} #1}\\
+{{\bf Submitted by:} #2} \hfill {{\bf Date:} #3} \\
+\\
+\rule[0.1in]{\textwidth}{0.025in}
+%\thispagestyle{empty}
+}
+
+
+\begin{document}
+
+\headings{Prof. Rezaul A. Chowdhury}{Yoni Fogel, Arun Rathakrishnan and Amitav Paul}{May 10, 2013}
+\newcommand{\lecnum}{1}  % Lecture Number
+
+{\centerline {\Huge Homework \# 3}}
+
+\section{Matrix Multiplication.}
+     
+\subsection{}
+{\bf Answer:}
+
+\subsection{}
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {RT = Running Time. Times are in seconds.}
+\end{center}
+\end {table}
+
+\subsection{}
+{\bf Answer:}
+
+\subsection{}
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {RT = Running Time. Times are in seconds.}
+\end{center}
+\end {table}
+
+
+\subsection{}
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {Running Times. RT = Running Time. Times are in seconds.}
+\end{center}
+\end {table}
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {Instructions Executed.}
+\end{center}
+\end {table}
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {L1 Misses.}
+\end{center}
+\end {table}
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {L2 Misses.}
+\end{center}
+\end {table}
+
+\begin {table}[H]
+\begin{center}
+    \begin{tabular}{ | c | c | c | c | c | c | c |}
+    \hline
+    Input File & & & &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline
+     &  &  &  &  &  & \\ \hline    
+    \end{tabular}
+    \caption {L3 Misses.}
+\end{center}
+\end {table}
+
+
+\section{Protein Accordion Folding.}
+\subsection{}
+See \func{Optimal-Score-A}.
+        \func{Score-One-Fold-A} takes $\Oh{n}$ time to run and is run $\Oh{n^3}$ times.
+        It uses $\Oh{n^2}$ space for the \func{Score}$(~i,~j~)$ matrix.
+
+
+\subsection{}
+Modification:
+        See \func{Optimal-Score-B}.  Instead of calculating \func{Score-One-Fold} on the fly, it generates all $\Oh{n^3}$ combinations in advance, taking $\Oh{n^3}$ time and space.  Then lookup is $\Oh{1}$ and so the total time and space is $\Oh{n^3}$ and $\Oh{n^3}$ respectively.
+        Both \func{Optimal-Score-B} and \func{Preprocess-Score-One-Fold-B} run in $\Oh{n^3}$ time.
+
+        \bigskip
+        Cache-complexity: {\bf \em TODO (what is here is just notes)}
+        \func{Preprocess-Score-One-Fold-B}:
+        For each $1\leq j \leq n$ we do $n$ scans over $P$.
+        We can assume $M > n$ so this is a \func{Scan}  ($\Oh{n/B}$ transfers).
+
+        Also we read and write to the $3$d array \func{Score-One-Fold-B}.
+        We need at least $\Oh{n^3/B}$ transfers (because we use $\Oh{n^3}$ space).
+        \func{Preprocess-Score-One-Fold-B} can match that.
+
+\subsection{}
+Modification:
+        See \func{Optimal-Score-C} and \func{Preprocess-Score-One-Fold-C}.
+        There is redundancy in \func{Score-One-Fold} such that the only parameters that matter are $j$ and $\min{(~j-i, ~k-j-1~)}$.
+        
+        \func{Optimal-Score-C} runs in $\Oh{n^3}$ time and \func{Preprocess-Score-One-Fold-B} run in $\Oh{n^2}$ time.
+        Both use $\Oh{n^2}$ memory now.
+
+        \bigskip
+        Cache-complexity: {\bf \em TODO (what is here is just notes)}
+
+\subsection{}
+{\bf \em TODO (what is here is just notes)}
+
+\subsection{Find some invariants and modify algorithm from part 2(c) to run in $\Oh{n^2}$ time and use $\Oh{n^2}$ space.}
+
+See \func{Optimal-Score-E}
+
+
+
+%%%%%%%%%%%% Begin A
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+    \begin{minipage}{\textwidth}
+        \begin{center}
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Optimal-Score-A}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \xfor $i \gets n$ \xdownto $1$ \xdo
+                            \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
+                            \item \T \T \xif $j \geq n-1$ \xthen
+                                \comment{\func{Score} is undefined without this change.  Original: \xif $j = n$.}
+                            \item \T \T \T \func{Score}$(~i,~j~) \gets 0$
+                            \item \T \T \xelse
+                            \item \T \T \T $best \gets 0$
+                            \item \T \T \T \xfor $k \gets n$ \xdownto $j+2$
+                            \item \T \T \T \T $candidate \gets$ \func{Score-One-Fold-A}$(~i,~j,~k~) +$ \func{Score}$(~j+1,~k~)$
+                            \item \T \T \T \T $best \gets \max{(~candidate, ~best~)}$
+                            \item \T \T \T \func{Score}$(~i,~j~) \gets best$
+                            \item $answer \gets 0$
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
+                            \item \xreturn $answer$
+                        \end{enumerate}
+
+                    }
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Score-One-Fold-A}$(~i, ~j, ~k, ~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids, where $n > k-1 > j > i > 0$.  This function counts the number of aligned hydrophobic pairs when the segment $P[i:k]$ is folded at locations $j$ and $j+1$.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item $c \gets 0$
+
+                            \item \xfor $\ell \gets 1$ \xto $\min{(~j-i, ~k-j-1~)}$ \xdo
+                            \item \T \xif \func{Hydrophobic}$(~P[j-\ell]~)$ \xand \func{Hydrophobic}$(~P[j+1+\ell]~)$ \xthen
+                            \item \T \T $c \gets c + 1$
+                            \item \xreturn $c$
+                        \end{enumerate}
+
+                    }
+
+
+
+
+
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+        \end{center}
+    \end{minipage}
+\end{figure*}
+
+%%%%%%%%%%%% Begin B
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+    \begin{minipage}{\textwidth}
+        \begin{center}
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Optimal-Score-B}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \func{Score-One-Fold-B} $\gets$ \func{Preprocess-Score-One-Fold-B}$(~P~)$
+                            \item \xfor $i \gets n$ \xdownto $1$ \xdo
+                            \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
+                            \item \T \T \xif $j \geq n-1$ \xthen
+                            \item \T \T \T \func{Score}$(~i,~j~) \gets 0$
+                            \item \T \T \xelse
+                            \item \T \T \T $best \gets 0$
+                            \item \T \T \T \xfor $k \gets n$ \xdownto $j+2$
+                            \item \T \T \T \T $candidate \gets$ \func{Score-One-Fold-B}$(i,j,k) +$ \func{Score}$(j+1,k)$
+                            \item \T \T \T \T $best \gets \max{(candidate, best)}$
+                            \item \T \T \T \func{Score}$(i,j) \gets best$
+                            \item $answer \gets 0$
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
+                            \item \xreturn $answer$
+                        \end{enumerate}
+
+                    }
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Preprocess-Score-One-Fold-B}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids. Returns a $3$d memoized array for \func{Score-One-Fold-A}, ($0$ when \func{Score-One-Fold-A} is undefined).}
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T \xfor $i \gets j$ \xdownto $1$ \xdo
+                            \item \T \T \xfor $k \gets j$ \xto $n$ \xdo
+                            \item \T \T \T $\ell \gets \min{(~j-i, ~k-j-1~)}$
+                            \item \T \T \T \xif $\ell < 1$ \xthen
+                            \item \T \T \T \T \func{Score-One-Fold-B}$(~i, ~j, ~k ~) \gets 0$
+                            \item \T \T \T \xelseif \func{Hydrophobic}$(P[j-\ell])$ \xand \func{Hydrophobic}$(P[j+1+\ell])$ \xthen
+                            \item \T \T \T \T \func{Score-One-Fold-B}$(~i, ~j, ~k ~) \gets$ \func{Score-One-Fold-B}$(~j-\ell+1, ~j, ~j+\ell ~) + 1$
+                            \item \T \T \T \xelse
+                            \item \T \T \T \T \func{Score-One-Fold-B}$(~i, ~j, ~k ~) \gets$ \func{Score-One-Fold-B}$(~j-\ell+1, ~j, ~j+\ell ~)$
+                            \item \xreturn \func{Score-One-Fold-B}
+                        \end{enumerate}
+
+                    }
+
+
+
+
+
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+
+        \end{center}
+    \end{minipage}
+\end{figure*}
+
+%%%%%%%%%%%% Begin C
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+    \begin{minipage}{\textwidth}
+        \begin{center}
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Optimal-Score-C}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \func{Score-One-Fold-C} $\gets$ \func{Preprocess-Score-One-Fold-C}$(~P~)$
+                            \item \xfor $i \gets n$ \xdownto $1$ \xdo
+                            \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
+                            \item \T \T \xif $j \geq n-1$ \xthen
+                            \item \T \T \T \func{Score}$(~i,~j~) \gets 0$
+                            \item \T \T \xelse
+                            \item \T \T \T $best \gets 0$
+                            \item \T \T \T \xfor $k \gets n$ \xdownto $j+2$
+                            \item \T \T \T \T $\ell \gets \min{(~j-i, ~k-j-1~)}$
+                            \item \T \T \T \T $candidate \gets$ \func{Score-One-Fold-C}$(j,\ell) +$ \func{Score}$(j+1,k)$
+                            \item \T \T \T \T $best \gets \max{(candidate, best)}$
+                            \item \T \T \T \func{Score}$(i,j) \gets best$
+                            \item $answer \gets 0$
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
+                            \item \xreturn $answer$
+                        \end{enumerate}
+
+                    }
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Preprocess-Score-One-Fold-C}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids. Returns a $2$d subset of \func{Score-One-Fold-B}, where we only have the answer for each $1\leq j,\ell \leq n$.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T \xfor $\ell \gets 0$ \xto $\min{(~j-1, ~n-j-1~)}$ \xdo
+                            \item \T \T \xif $\ell < 1$ \xthen
+                            \item \T \T \T \func{Score-One-Fold-C}$(~j, ~\ell~) \gets 0$
+                            \item \T \T \xelseif \func{Hydrophobic}$(P[j-\ell])$ \xand \func{Hydrophobic}$(P[j+1+\ell])$ \xthen
+                            \item \T \T \T \func{Score-One-Fold-C}$(~j, ~\ell~) \gets$ \func{Score-One-Fold-C}$(~j, ~\ell-1~) + 1$
+                            \item \T \T \xelse
+                            \item \T \T \T \func{Score-One-Fold-C}$(~j, ~\ell~) \gets$ \func{Score-One-Fold-C}$(~j, ~\ell-1~)$
+                            \item \xreturn \func{Score-One-Fold-B}
+                        \end{enumerate}
+
+                    }
+
+
+
+
+
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+
+        \end{center}
+    \end{minipage}
+\end{figure*}
+
+%%%%%%%%%%%% Begin E
+\begin{figure*}[p!]
+% \vspace{0.8cm}
+    \begin{minipage}{\textwidth}
+        \begin{center}
+
+            \framebox{
+                \begin{minipage}{\textwidth}
+                    {\footnotesize
+                        \medskip\noindent\func{Optimal-Score-E}$(~P ~)$
+
+                        \vspace{0.1cm}
+                        \noindent
+                        ({\color{gray} $P[1:n]$ is a sequence of amino acids.})
+
+                        \noindent
+                        \begin{enumerate}[1.]
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $\mfunc{Initialized}(~j~) \gets \mfunc{False}$
+                            \item \T \xfor $k \gets 1$ \xto $n$ \xdo
+                            \item \T \T \mfunc{Best-Score}$(~j, ~k~) \gets 0$
+                                \comment{\mfunc{Best-Score}$(~j, ~k~) = \max_{k \leq \ell \leq n}(\mfunc{Score}(~j,~\ell~)$}
+                            \item \T \T \mfunc{Score}$(~j, ~k~) \gets 0$
+                            \item \mfunc{Score-One-Fold-C} $\gets$ \mfunc{Preprocess-Score-One-Fold-C}$(~P~)$
+                            \item \xfor $i \gets n$ \xdownto $1$ \xdo
+                            \item \T \xfor $j \gets n$ \xdownto $i+1$ \xdo
+                            \item \T \T \xif $j < n-1$ \xthen
+                            \item \T \T \T \xif $\lnot \mfunc{Initialized}(~j~)$ \xthen
+                            \item \T \T \T \T $\mfunc{Initialized}(~j~) \gets \mfunc{True}$
+                            \item \T \T \T \T $\mfunc{Best-Score}(~j+1, ~n~) \gets \mfunc{Score}(~j+1, ~n~)$
+                            \item \T \T \T \T \xfor $k \gets n-1$ \xdownto $j+1$ \xdo
+                            \item \T \T \T \T \T $\mfunc{Best-Score}(~j+1, ~k ~) \gets \max{(~\mfunc{Best-Score}(~j+1,~k+1~),~\mfunc{Score}(~j+1,~k~)~)}$
+                            \item \T \T \T $k \gets 2j-i+1$
+                                \comment{$j-i = k-j-1$}
+                            \item \T \T \T $\ell \gets j-i$
+                            \item \T \T \T $C_1 \gets \mfunc{Score}(~i+1,~j~)$
+                            \item \T \T \T $C_2 \gets \mfunc{Best-Score}(~j+1,~k~) + \mfunc{Score-One-Fold-C}(~j,~\ell~)$
+                            \item \T \T \T $\mfunc{Score}(~i,~j~) \gets \max{(~C_1,~C_2~)}$
+                            \item $answer \gets 0$
+                            \item \xfor $j \gets 1$ \xto $n$ \xdo
+                            \item \T $answer \gets \max{(~answer, ~\mfunc{Score}(~1, ~j~))}$
+                            \item \xreturn $answer$
+                        \end{enumerate}
+
+                    }
+                \end{minipage}
+                \vspace{0.1cm}
+            }
+
+        \end{center}
+    \end{minipage}
+\end{figure*}
+
+
+
+\end{document}
+
+
+
